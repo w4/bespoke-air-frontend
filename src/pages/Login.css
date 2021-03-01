@@ -1,0 +1,25 @@
+#login-page {
+    background: url(./LoginBackground.jpg);
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: bottom;
+}
+
+#login-container {
+    background: radial-gradient(transparent, rgba(0, 169, 255, .5));
+}
+
+.side-lines {
+    display: grid;
+    grid-template-columns: minmax(20px, 1fr) auto minmax(20px, 1fr);
+    align-items: center;
+    text-align: center;
+    grid-gap: 20px;
+    width: 100%;
+}
+
+.side-lines:before,
+.side-lines:after {
+    content: '';
+    border-top: 1px solid;
+}
