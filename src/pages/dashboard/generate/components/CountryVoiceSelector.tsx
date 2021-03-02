@@ -159,7 +159,7 @@ export default class CountryVoiceSelector extends Component<Props, State> {
                 onChange={e => this.handleSelectChange(e || undefined)}
             />;
         } else {
-            languagePicker = <div className="d-inline-block" style={{ padding: '6px 16px 7px 10px', color: '#c0c0c0' }}>{this.props.selected.country.label}</div>;
+            languagePicker = <div className="d-inline-block" style={{ padding: '6px 16px 7px 10px', color: '#707b9f' }}>{this.props.selected.country.label}</div>;
         }
 
         let voicePicker;
@@ -171,7 +171,7 @@ export default class CountryVoiceSelector extends Component<Props, State> {
                 onChange={e => this.handleSelectChange(undefined, e || undefined)}
             />;
         } else {
-            voicePicker = <div className="d-inline-block" style={{ padding: '6px 16px 7px 10px', color: '#c0c0c0' }}>{this.props.selected.voice.display}</div>;
+            voicePicker = <div className="d-inline-block" style={{ padding: '6px 16px 7px 10px', color: '#707b9f' }}>{this.props.selected.voice.display}</div>;
         }
 
         return <>

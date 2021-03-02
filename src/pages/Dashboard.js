@@ -3,13 +3,17 @@ import logo from '../logo.png';
 import { Link, NavLink, Route } from 'react-router-dom';
 import DashboardHome from './dashboard/Home.tsx';
 import DashboardSettings from './dashboard/Settings';
+import { FiLogOut } from 'react-icons/fi';
+import { useAuth } from '../useAuth';
 
 function Dashboard({ match }) {
+    const auth = useAuth();
+
     return (
-        <div className="min-vh-100 bg-red" style={{ paddingBottom: '20px' /*fix this*/ }}>
+        <div className="min-vh-100 bg-blue" style={{ paddingBottom: '20px' /*fix this*/ }}>
             <nav className="navbar navbar-light w-100 navbar-expand-sm bg-white shadow-sm">
                 <div className="container-fluid">
-                    <Link to="/" className="navbar-brand">
+                    <Link to="/dashboard" className="navbar-brand">
                         <img src={logo} width="48" />
                     </Link>
 
@@ -25,6 +29,10 @@ function Dashboard({ match }) {
                                 <NavLink to={match.url + '/settings'} className="nav-link" activeClassName="active">Settings</NavLink>
                             </li>
                         </ul>
+
+                        <div>
+                            <button type="button" className="btn" onClick={e => auth.signout()}><FiLogOut /></button>
+                        </div>
                     </div>
                 </div>
             </nav>

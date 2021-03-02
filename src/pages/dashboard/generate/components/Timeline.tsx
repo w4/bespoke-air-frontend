@@ -117,7 +117,7 @@ export default class Timeline extends Component<Props, State> {
 
         const VoiceSlider = (props: { audio: Audio }) => (
             <div className="d-flex">
-                <div style={{ fontSize: '2rem', paddingRight: '10px', marginRight: '10px', borderRight: '1px solid #e96d65' }}>🗣️</div>
+                <div style={{ fontSize: '2rem', paddingRight: '10px', marginRight: '10px', borderRight: '1px solid #181d45' }}>🗣️</div>
                 <ReactSlider
                     ref={this.voiceTrackRef}
                     className="horizontal-slider"
@@ -146,7 +146,7 @@ export default class Timeline extends Component<Props, State> {
                 {this.props.manipulater.tts.map(v => <VoiceSlider audio={v} />)}
 
                 {this.props.selectedSong ? <div className="d-flex">
-                    <div style={{ fontSize: '2rem', paddingRight: '10px', marginRight: '10px', borderRight: '1px solid #e96d65' }}>🎵</div>
+                    <div style={{ fontSize: '2rem', paddingRight: '10px', marginRight: '10px', borderRight: '1px solid #181d45' }}>🎵</div>
 
                     <ReactSlider
                         ref={this.musicTrackRef}

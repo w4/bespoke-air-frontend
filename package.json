@@ -21,6 +21,7 @@
     "react-scripts": "4.0.3",
     "react-select": "^4.1.0",
     "react-slider": "^1.1.4",
+    "react-spinners": "^0.10.6",
     "react-tooltip": "^4.2.15",
     "sass": "^1.32.8",
     "typescript": "^4.2.2",

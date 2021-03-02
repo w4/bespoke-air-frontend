@@ -7,12 +7,12 @@ export const optionStyles = {
     control: (provided: any, state: any) => ({
         ...provided,
         border: 'none !important',
-        borderBottom: '1px dashed #b14943 !important',
+        borderBottom: '1px dashed #535f8d !important',
         background: 'transparent',
         borderRadius: 0,
-        color: '#b14943',
+        color: '#535f8d',
         '&:hover': {
-            color: '#333',
+            textShadow: '0 0 0.15em #547e9b',
         }
     }),
     indicatorsContainer: () => ({
@@ -41,12 +41,12 @@ export const optionStyles = {
         ...provided,
         whiteSpace: 'nowrap',
         width: 'auto',
-        background: '#76C3BD'
+        background: '#323f74'
     }),
     option: (provided: any, state: any) => ({
         ...provided,
         fontSize: '0.8em',
-        color: state.isSelected ? '#478982' : 'white',
+        color: state.isSelected ? '#535f8d' : 'white',
         background: state.isFocused ? 'rgba(0, 0, 0, 0.05) !important' : 'none !important',
     })
 };

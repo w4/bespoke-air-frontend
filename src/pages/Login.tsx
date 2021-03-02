@@ -2,7 +2,7 @@ import logo from '../logo.png';
 import './Login.css';
 import { useAuth } from '../useAuth';
 import { useLocation, useHistory, Link } from 'react-router-dom';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import firebase from 'firebase/app';
 import { ImGoogle } from "react-icons/im";
 
@@ -10,22 +10,27 @@ function Login() {
     const auth = useAuth();
     const location = useLocation();
     const history = useHistory();
+    const [email, setEmail] = useState('');
+    const [error, setError] = useState('');
 
-    let from: any = location.state || { from: { pathname: "/" } };
+    // let from: any = location.state || { from: { pathname: "/" } };
     const login = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        auth.signin("yolo@as.com", "asasas").then((e: firebase.User) => {
-            history.replace(from.from);
+        auth.signin(email).then((e: firebase.User) => {
+            // history.replace(from.from);
+            setError('');
             console.log(e);
-        });
+        }).catch((e: any) => setError(e.message));
     };
 
     const loginWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithRedirect(provider);
+        firebase.auth().signInWithRedirect(provider).catch((e: any) => setError(e.message));
     };
 
-    return (
+    return (<>
+        { error || auth.error ? (<div className="card bg-danger"><div className="card-body">{error || auth.error}</div></div>) : <></>}
+
         <div id="login-page">
             <div id="login-container" className="d-flex vh-100 justify-content-center align-items-center">
                 <img src={logo} height="200rem" />
@@ -34,7 +39,9 @@ function Login() {
                     <div className="card-body">
                         <form action="#" onSubmit={login}>
                             <div className="form-floating">
-                                <input type="email" name="email" id="email" className="form-control form-control-lg" placeholder="john.smith@gmail.com" required />
+                                <input type="email" name="email" id="email" className="form-control form-control-lg" placeholder="john.smith@gmail.com" required
+                                    onChange={e => setEmail(e.target.value)}
+                                />
                                 <label htmlFor="email" className="form-label">Email Address</label>
                             </div>
 
@@ -51,7 +58,7 @@ function Login() {
                 </div>
             </div>
         </div>
-    );
+    </>);
 }
 
 export default Login;

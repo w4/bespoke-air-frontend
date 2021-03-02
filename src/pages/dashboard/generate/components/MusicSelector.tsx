@@ -94,7 +94,7 @@ export default class MusicSelector extends Component<Props, State> {
                 onChange={e => this.updateMusicList(e ? e.value : undefined)}
             />;
         } else {
-            moodSelect = <div className="d-inline-block" style={{ padding: '6px 16px 7px 10px', color: '#c0c0c0' }}>{this.state.selectedMusicMood || this.props.value?.mood}</div>;
+            moodSelect = <div className="d-inline-block" style={{ padding: '6px 16px 7px 10px', color: '#707b9f' }}>{this.state.selectedMusicMood || this.props.value?.mood}</div>;
         }
 
         let songSelect;
@@ -112,7 +112,7 @@ export default class MusicSelector extends Component<Props, State> {
             songSelect = this.state.selectedMusicMood == 'no'
                 ? <></>
                 : <div className="d-inline-block"
-                    style={{ padding: '6px 16px 7px 10px', color: '#c0c0c0' }}>
+                    style={{ padding: '6px 16px 7px 10px', color: '#707b9f' }}>
                     {(this.props.value || this.state.selectedMusic).artist} - {(this.props.value || this.state.selectedMusic).track_name}
                 </div>;
         }

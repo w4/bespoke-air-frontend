@@ -1,5 +1,9 @@
 .bg-red {
-    background-color: #E96D65 !important; /* #181d45 */
+    background-color: #E96D65 !important;
+}
+
+.bg-blue {
+    background-color: #181d45 !important;
 }
 
 .text-shadow {
@@ -18,4 +22,15 @@
 
 .rounded {
     border-radius: 0.5rem !important;
+}
+
+/* todo: move this to scss var */
+.btn-primary {
+    background: #323f74;
+    border: 1px solid #323f74;
+}
+
+.btn-primary:hover {
+    background: #37467c;
+    border: 1px solid #37467c;
 }

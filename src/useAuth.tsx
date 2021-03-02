@@ -20,18 +20,40 @@ export const useAuth = () => {
 };
 
 function useProvideAuth() {
-    const [user, setUser] = useState<firebase.User | null>(null);
+    const [user, setUser] = useState<firebase.User | false | null>(null);
+    const [userPackage, setPackage] = useState<number | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const updatePackage = (u: firebase.User | null) => {
+        if (!u) {
+            setPackage(null);
+            return;
+        }
+
+        u.getIdTokenResult()
+            .then((result) => {
+                setPackage(result.claims.package || 0);
+            })
+            .catch((e) => {
+                // todo handle this
+                console.log(e);
+                setError("failed to fetch package");
+            });
+    };
 
     // Wrap any Firebase methods we want to use making sure ...
     // ... to save the user to state.
-    const signin = (email: string, password: string) => {
+    const signin = (email: string) => {
         return firebase
             .auth()
-            .signInWithEmailAndPassword(email, password)
-            .then(response => {
-                setUser(response.user);
-                return response.user;
-            });
+            .sendSignInLinkToEmail(email, {
+                handleCodeInApp: true,
+                url: window.location.href,
+                // iOS: {},
+                // android: {},
+                // dynamicLinkDomain: '',
+            })
+            .then(() => window.localStorage.setItem('emailForSignIn', email));
     };
 
     const signup = (email: string, password: string) => {
@@ -40,6 +62,7 @@ function useProvideAuth() {
             .createUserWithEmailAndPassword(email, password)
             .then(response => {
                 setUser(response.user);
+                updatePackage(response.user);
                 return response.user;
             });
     };
@@ -49,7 +72,7 @@ function useProvideAuth() {
             .auth()
             .signOut()
             .then(() => {
-                setUser(null);
+                setUser(false);
             });
     };
 
@@ -71,16 +94,39 @@ function useProvideAuth() {
             });
     };
 
-    // Subscribe to user on mount
-    // Because this sets state in the callback it will cause any ...
-    // ... component that utilizes this hook to re-render with the ...
-    // ... latest auth object.
     useEffect(() => {
+        firebase.auth()
+            .getRedirectResult()
+            .then((result) => {
+                if (result.user) {
+                    setUser(result.user);
+                    updatePackage(result.user);
+                }
+            })
+            .catch((e) => setError(e.message));
+
+        if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
+            let email = window.localStorage.getItem('emailForSignIn');
+            while (!email) {
+                email = window.prompt('Please provide your email for confirmation');
+            }
+
+            firebase.auth().signInWithEmailLink(email, window.location.href)
+                .then((result) => {
+                    window.localStorage.removeItem('emailForSignIn');
+                    setUser(result.user);
+                    updatePackage(result.user);
+                })
+                .catch((e) => setError(e.message));
+        }
+
         const unsubscribe = firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 setUser(user);
+                updatePackage(user);
             } else {
-                setUser(null);
+                setUser(false);
+                updatePackage(null);
             }
         });
 
@@ -91,6 +137,8 @@ function useProvideAuth() {
     // Return the user object and auth methods
     return {
         user,
+        error,
+        userPackage,
         signin,
         signup,
         signout,

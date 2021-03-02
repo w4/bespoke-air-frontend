@@ -12,6 +12,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { ProvideAuth, useAuth } from "./useAuth";
 import Register from "./pages/Register";
+import { useEffect, useState } from "react";
+import { SkewLoader } from "react-spinners";
 
 function App() {
   return (
@@ -22,9 +24,10 @@ function App() {
             <PrivateRoute exact path="/">
               <Redirect to="/dashboard" />
             </PrivateRoute>
-            <Route path="/login" component={Login} />
-            <Route path="/register" component={Register} />
-            <PrivateRoute path="/dashboard" component={Dashboard} />
+            {/* cant use component here because we use render in *Route */}
+            <PrivateRoute path="/dashboard" requiresPackage={true} component={Dashboard}></PrivateRoute>
+            <UnauthenticatedRoute path="/login" component={Login}></UnauthenticatedRoute>
+            <UnauthenticatedRoute path="/register" component={Register}></UnauthenticatedRoute>
           </Switch>
         </Router>
       </ProvideAuth>
@@ -32,25 +35,45 @@ function App() {
   );
 }
 
-function PrivateRoute({ children, ...rest }) {
+function PrivateRoute({ component: Component, requiresPackage, children, ...rest }) {
   const auth = useAuth();
 
-  // TODO: --IMPORTANT-- FIX THIS. RENDER DOESN'T WORK WITH COMPONENT
-  return (
-    <Route
-      {...rest}
-      render={({ location }) =>
-        auth.user ? (
-          children
-        ) : (
-            <Redirect
-              to={{
-                pathname: "/login",
-                state: { from: location }
-              }}
-            />
-          )
+  return <Route {...rest} render={props => {
+    if (auth.user) {
+      if (auth.userPackage === null) {
+        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <SkewLoader size={30} />
+        </div>;
+        // TODO:
+        //} else if (requiresPackage && auth.userPackage === 0) {
+        //  return <strong>SORRY!! BUY A PACKAGE HAHA TODO</strong>;
+      } else {
+        return <Component {...props} />;
       }
+    } else if (auth.user === null) {
+      return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <SkewLoader size={30} />
+      </div>;
+    } else {
+      return <Redirect to={{ pathname: "/login", state: { from: props.location } }} />
+    }
+  }} />;
+}
+
+function UnauthenticatedRoute({ component: Component, children, ...rest }) {
+  const auth = useAuth();
+
+  return (
+    <Route {...rest} render={props => !auth.user ? (
+      <Component {...props} />
+    ) : (
+        <Redirect
+          to={{
+            pathname: "/dashboard",
+            state: { from: props.location }
+          }}
+        />
+      )}
     />
   );
 }
