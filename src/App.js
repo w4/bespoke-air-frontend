@@ -7,6 +7,7 @@ import {
   Link,
   Redirect
 } from "react-router-dom";
+import './App.css';
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -21,9 +22,7 @@ function App() {
       <ProvideAuth>
         <Router>
           <Switch>
-            <PrivateRoute exact path="/">
-              <Redirect to="/dashboard" />
-            </PrivateRoute>
+            <PrivateRoute exact path="/" component={() => <Redirect to="/dashboard" />} />
             {/* cant use component here because we use render in *Route */}
             <PrivateRoute path="/dashboard" requiresPackage={true} component={Dashboard}></PrivateRoute>
             <UnauthenticatedRoute path="/login" component={Login}></UnauthenticatedRoute>

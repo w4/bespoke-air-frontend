@@ -39,7 +39,7 @@ export default class AudioManipulation {
     }
 
     getVoiceDuration(): number {
-        return this.tts.map(v => v.effects.duration).reduce((a, b) => a + b, 0);
+        return this.tts.map(v => v.effects.duration + v.effects.offsetSecs).reduce((a, b) => Math.max(a, b), 0);
     }
 
     getMusicDuration(): number {
@@ -55,7 +55,7 @@ export default class AudioManipulation {
     }
 
     private getMaxPossibleLength() {
-        return Math.max(this.music ? this.music.getLength() : 0, this.getVoiceDuration());
+        return Math.max(this.music ? this.music.getLength() : 0, this.getVoiceDuration() * this.tts[0].buffer.sampleRate);
     }
 
     render(): AudioBuffer {

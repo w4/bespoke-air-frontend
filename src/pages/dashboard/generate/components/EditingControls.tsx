@@ -6,6 +6,7 @@ import Timeline from "./Timeline";
 import { State as AudioSettingsState } from "./AudioSourceSettings";
 import AudioManipulation from "../../../../lib/AudioManipulation";
 import TtsEntry from "./TtsEntry";
+import { BASE_URL } from "../../../../Stage";
 
 interface Props {
     selectedVoice: SelectedCountryVoice,
@@ -47,13 +48,31 @@ export default class EditingControls extends Component<Props, State> {
         });
     }
 
-    async pushNewTts(txt: string) {
-        const voice = await fetch('https://dub.backend.air.bespokeonhold.com/recordings/266db595-4f17-4249-9812-cf7f73de772d.voicemaker.mp3')
-            .then(v => v.arrayBuffer());
+    async pushNewTts(text: string) {
+        const request = {
+            text,
+            language: this.props.selectedVoice.country.value,
+            voice: this.props.selectedVoice.voice.id
+        };
 
-        await this.audioManipulation?.pushNewTts(voice);
+        try {
+            const generateResponse = await fetch(BASE_URL + "/generate", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(request)
+            }).then(v => v.json());
 
-        this.forceUpdate();
+            const voice = await fetch(BASE_URL + generateResponse.url)
+                .then(v => v.arrayBuffer());
+
+            await this.audioManipulation?.pushNewTts(voice);
+
+            this.forceUpdate();
+        } catch (e) {
+            alert("TODO: failed to grab voice " + JSON.stringify(e));
+        }
     }
 
     async play() {
