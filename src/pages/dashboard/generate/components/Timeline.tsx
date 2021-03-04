@@ -1,7 +1,6 @@
 import React, { Component, Ref } from "react";
 import ReactSlider from "react-slider";
 import AudioManipulation, { Audio } from "../../../../lib/AudioManipulation";
-import { SelectedCountryVoice } from "./CountryVoiceSelector";
 import { SelectedSong } from "./MusicSelector";
 interface Props {
     selectedSong: SelectedSong | null,
@@ -23,7 +22,7 @@ export default class Timeline extends Component<Props, State> {
 
     stopMovingTrack() {
         if (this.setState) {
-            this.setState({ ...this.state, movingTrack: false });
+            this.setState({ movingTrack: false });
         }
     }
 
@@ -50,11 +49,11 @@ export default class Timeline extends Component<Props, State> {
             return;
         }
 
-        if (this.lastXSeen == 0) {
+        if (this.lastXSeen === 0) {
             this.lastXSeen = e.clientX;
         }
 
-        if (e.clientX == this.lastXSeen) return;
+        if (e.clientX === this.lastXSeen) return;
 
         const delta = e.clientX - this.lastXSeen;
         const percentSlider = delta / (document.querySelector('.horizontal-slider') as any).getBoundingClientRect().width;
@@ -65,26 +64,24 @@ export default class Timeline extends Component<Props, State> {
                 let musicNewPositionStart = Math.max(0, this.state.musicTrackPosition[0] + (track.props.max * percentSlider));
                 let musicNewPositionEnd = Math.min(track.props.max, this.state.musicTrackPosition[1] + (track.props.max * percentSlider));
 
-                if (musicNewPositionStart == 0)
+                if (musicNewPositionStart === 0)
                     musicNewPositionEnd = this.state.musicTrackPosition[1] - this.state.musicTrackPosition[0];
 
-                if (musicNewPositionEnd == track.props.max)
+                if (musicNewPositionEnd === track.props.max)
                     musicNewPositionStart = track.props.max - (this.state.musicTrackPosition[1] - this.state.musicTrackPosition[0]);
 
                 if (this.props.manipulater.music) {
                     this.props.manipulater.music.effects.offsetSecs = musicNewPositionStart;
                     this.props.manipulater.music.effects.duration = musicNewPositionEnd - musicNewPositionStart;
                 }
-                this.setState({ ...this.state, musicTrackPosition: [musicNewPositionStart, musicNewPositionEnd] });
+                this.setState({ musicTrackPosition: [musicNewPositionStart, musicNewPositionEnd] });
                 break;
             default:
-                if (!this.state.voiceTrackPosition[this.state.movingTrack]) {
-                    this.state.voiceTrackPosition[this.state.movingTrack] = track.state.value;
-                }
+                let currentTrackPosition = this.state.voiceTrackPosition[this.state.movingTrack] || track.state.value;
 
                 let voiceNewPositionStart = Math.min(
                     track.props.max - this.props.manipulater.tts[this.state.movingTrack].buffer.duration,
-                    Math.max(0, this.state.voiceTrackPosition[this.state.movingTrack][0] + (track.props.max * percentSlider))
+                    Math.max(0, currentTrackPosition[0] + (track.props.max * percentSlider))
                 );
                 let voiceNewPositionEnd = voiceNewPositionStart + this.props.manipulater.tts[this.state.movingTrack].buffer.duration;
 
@@ -94,7 +91,7 @@ export default class Timeline extends Component<Props, State> {
                 const newVoiceTrackPosition = this.state.voiceTrackPosition;
                 newVoiceTrackPosition[this.state.movingTrack] = [voiceNewPositionStart, voiceNewPositionEnd];
 
-                this.setState({ ...this.state, voiceTrackPosition: newVoiceTrackPosition });
+                this.setState({ voiceTrackPosition: newVoiceTrackPosition });
                 break;
         }
 
@@ -103,7 +100,6 @@ export default class Timeline extends Component<Props, State> {
 
     async componentDidMount() {
         this.setState({
-            ...this.state,
             movingTrack: false,
             loading: false,
             musicTrackPosition: [0, this.props.manipulater.getMusicDuration()],
@@ -140,10 +136,10 @@ export default class Timeline extends Component<Props, State> {
                     ariaLabel={['Voice start', 'Voice end']}
                     ariaValuetext={(state: any) => `Thumb value ${state.valueNow}`}
                     renderThumb={(props: any, state: any) => <div {...props}><div className="value">{new Date(state.valueNow * 1000).toISOString().substr(11, 8)}</div></div>}
-                    renderTrack={(props: any, state: any) => state.index == 1 ?
+                    renderTrack={(props: any, state: any) => state.index === 1 ?
                         <div
                             {...props}
-                            onMouseDown={e => this.setState({ ...this.state, movingTrack: sliderId })}
+                            onMouseDown={e => this.setState({ movingTrack: sliderId })}
                         /> : <div {...props} />}
                     snapDragDisabled={true}
                     pearling
@@ -171,15 +167,15 @@ export default class Timeline extends Component<Props, State> {
                                 this.props.manipulater.music.effects.offsetSecs = n[0];
                                 this.props.manipulater.music.effects.duration = n[1] - n[0];
                             }
-                            this.setState({ ...this.state, musicTrackPosition: n });
+                            this.setState({ musicTrackPosition: n });
                         }}
                         ariaLabel={['Lower thumb', 'Upper thumb']}
                         ariaValuetext={(state: any) => `Thumb value ${state.valueNow}`}
                         renderThumb={(props: any, state: any) => <div {...props}><div className="value">{new Date(state.valueNow * 1000).toISOString().substr(11, 8)}</div></div>}
-                        renderTrack={(props: any, state: any) => state.index == 1 ?
+                        renderTrack={(props: any, state: any) => state.index === 1 ?
                             <div
                                 {...props}
-                                onMouseDown={e => this.setState({ ...this.state, movingTrack: SONG_TRACK_ID })}
+                                onMouseDown={e => this.setState({ movingTrack: SONG_TRACK_ID })}
                             /> : <div {...props} />}
                         snapDragDisabled={true}
                         pearling

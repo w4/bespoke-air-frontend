@@ -1,24 +1,20 @@
 import logo from '../logo.png';
 import './Login.css';
 import { useAuth } from '../useAuth';
-import { useLocation, useHistory, Link } from 'react-router-dom';
-import { FormEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FormEvent, useState } from 'react';
 import firebase from 'firebase/app';
 import { ImGoogle } from "react-icons/im";
 
 function Login() {
     const auth = useAuth();
-    const location = useLocation();
-    const history = useHistory();
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
 
-    // let from: any = location.state || { from: { pathname: "/" } };
     const login = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         auth.signin(email).then((e: firebase.User) => {
-            // history.replace(from.from);
-            setError('');
+            setError('Please check your emails.'); // TODO
             console.log(e);
         }).catch((e: any) => setError(e.message));
     };
@@ -33,7 +29,7 @@ function Login() {
 
         <div id="login-page">
             <div id="login-container" className="d-flex vh-100 justify-content-center align-items-center">
-                <img src={logo} height="200rem" />
+                <img alt="Logo" src={logo} height="200rem" />
 
                 <div className="card shadow border-0">
                     <div className="card-body">
@@ -53,7 +49,7 @@ function Login() {
                         <button onClick={loginWithGoogle} className="btn btn-primary btn-lg mb-3 mt-2 w-100"><ImGoogle /> Login with Google</button>
 
                         <div><small><Link to="/register" className="text-decoration-none">Not registered?</Link></small></div>
-                        <div><small><a href="#" className="text-decoration-none">Lost access to your email address?</a></small></div>
+                        <div><small><button className="text-decoration-none">Lost access to your email address?</button></small></div>
                     </div>
                 </div>
             </div>

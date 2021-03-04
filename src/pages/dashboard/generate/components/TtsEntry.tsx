@@ -39,13 +39,13 @@ export default class CountryVoiceSelector extends Component<Props, State> {
 
                     if (this.props.onChange)
                         this.props.onChange(e.target.value);
-                    this.setState({ ...this.state, currentCharacters: e.target.value.length, text: e.target.value });
+                    this.setState({ currentCharacters: e.target.value.length, text: e.target.value });
                 }}
                 onKeyDown={e => {
-                    if (e.key == 'Enter' && this.props.onEnter) {
+                    if (e.key === 'Enter' && this.props.onEnter) {
                         e.preventDefault();
                         this.props.onEnter(this.state.text);
-                        this.setState({ ...this.state, currentCharacters: 0, text: '' });
+                        this.setState({ currentCharacters: 0, text: '' });
                     }
                 }}
             />

@@ -29,21 +29,20 @@ export default class MusicSelector extends Component<Props, State> {
         fetch("https://dub.backend.air.bespokeonhold.com/music/list/moods")
             .then(v => v.json())
             .then(v => this.setState({
-                ...(this.state || {}),
                 musicMoods: ["no", ...v],
                 selectedMusicMood: "no",
             }));
     }
 
     updateMusicList(mood?: string) {
-        if (!mood || mood == "no") {
+        if (!mood || mood === "no") {
             if (this.props.onChange)
                 this.props.onChange(null);
-            this.setState({ ...this.state, musicForMood: [], selectedMusicMood: "no" });
+            this.setState({ musicForMood: [], selectedMusicMood: "no" });
             return;
         }
 
-        this.setState({ ...this.state, musicForMood: [], selectedMusicMood: mood });
+        this.setState({ musicForMood: [], selectedMusicMood: mood });
 
         fetch(`https://dub.backend.air.bespokeonhold.com/music/list/by-mood?mood=${encodeURIComponent(mood)}`)
             .then(v => v.json())
@@ -59,12 +58,12 @@ export default class MusicSelector extends Component<Props, State> {
                 if (this.props.onChange)
                     this.props.onChange(songEvent);
 
-                this.setState({ ...this.state, selectedMusicMood: mood, musicForMood: v, selectedMusic: songEvent });
+                this.setState({ selectedMusicMood: mood, musicForMood: v, selectedMusic: songEvent });
             });
     }
 
     onSongChange(id?: string) {
-        const song = id ? this.state.musicForMood.find(v => v.id == id) || this.state.musicForMood[0] : this.state.musicForMood[0];
+        const song = id ? this.state.musicForMood.find(v => v.id === id) || this.state.musicForMood[0] : this.state.musicForMood[0];
 
         const songEvent = {
             mood: this.state.selectedMusicMood,
@@ -77,7 +76,7 @@ export default class MusicSelector extends Component<Props, State> {
         if (this.props.onChange)
             this.props.onChange(songEvent);
 
-        this.setState({ ...this.state, selectedMusic: songEvent });
+        this.setState({ selectedMusic: songEvent });
     }
 
     render() {
@@ -109,7 +108,7 @@ export default class MusicSelector extends Component<Props, State> {
                 <div className="fs-6 mt-1">preview</div>
             </> : <></>;
         } else {
-            songSelect = this.state.selectedMusicMood == 'no'
+            songSelect = this.state.selectedMusicMood === 'no'
                 ? <></>
                 : <div className="d-inline-block"
                     style={{ padding: '6px 16px 7px 10px', color: '#707b9f' }}>
@@ -120,7 +119,7 @@ export default class MusicSelector extends Component<Props, State> {
         return <>
             I want&nbsp;
             {moodSelect}
-            &nbsp;music to be included{this.state.selectedMusicMood == 'no' ? '.' : ':'}&nbsp;
+            &nbsp;music to be included{this.state.selectedMusicMood === 'no' ? '.' : ':'}&nbsp;
             {songSelect}
         </>;
     }

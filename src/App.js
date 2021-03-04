@@ -4,7 +4,6 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link,
   Redirect
 } from "react-router-dom";
 import './App.css';
@@ -13,7 +12,6 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { ProvideAuth, useAuth } from "./useAuth";
 import Register from "./pages/Register";
-import { useEffect, useState } from "react";
 import { SkewLoader } from "react-spinners";
 
 function App() {

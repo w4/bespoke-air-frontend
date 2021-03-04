@@ -14,13 +14,6 @@ interface SelectElement {
     label: JSX.Element,
 }
 
-/**
- * Response from API
- */
-interface VoiceListResponse {
-    [lang: string]: VoiceListResponseVoice[],
-}
-
 interface VoiceListResponseVoice {
     name: string,
     portrait_url: string,
@@ -81,15 +74,16 @@ export default class CountryVoiceSelector extends Component<Props, State> {
                     .sort()
                     .map(([code, text]) => ({ value: code, label: <>{text}</> }));
 
+                // sort voices alphabetically and map them to the correct format
                 const voices: VoiceList = {};
                 for (const language of Object.keys(v)) {
                     let sortedVoices = (Object.entries(v[language]) as [string, VoiceListResponseVoice][])
-                        .sort((a, b) => a[1].name == b[1].name ? 0 : a[1].name < b[1].name ? -1 : 1);
+                        .sort((a, b) => a[1].name === b[1].name ? 0 : a[1].name < b[1].name ? -1 : 1);
 
                     voices[language] = Object.fromEntries(sortedVoices.map(([key, value]) => [
                         key,
                         {
-                            display: <><img src={value.portrait_url} width="55rem" /> {value.name}</>,
+                            display: <><img alt={`${value.name}'s face`} src={value.portrait_url} width="55rem" /> {value.name}</>,
                             name: value.name,
                             portraitUrl: value.portrait_url,
                         }
@@ -140,7 +134,6 @@ export default class CountryVoiceSelector extends Component<Props, State> {
             this.props.onChange(selectedLanguageVoice);
 
         this.setState({
-            ...this.state,
             currentSelection: selectedLanguageVoice,
         });
     }

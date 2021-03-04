@@ -17,7 +17,6 @@ interface State {
     voiceSettings: AudioSettingsState,
     musicSettings: AudioSettingsState,
     loading: boolean,
-    ttsEntries: string[],
 }
 
 export default class EditingControls extends Component<Props, State> {
@@ -27,7 +26,6 @@ export default class EditingControls extends Component<Props, State> {
         voiceSettings: { volume: 5, pitch: 0, tempo: 0 },
         musicSettings: { volume: 5, pitch: 0, tempo: 0 },
         loading: true,
-        ttsEntries: [],
     };
 
     async componentDidMount() {
@@ -40,8 +38,6 @@ export default class EditingControls extends Component<Props, State> {
 
         this.audioManipulation = new AudioManipulation(musicBytes);
         await this.audioManipulation.decodeMusic();
-
-        (window as any).audioManipulation = this.audioManipulation;
 
         this.setState({
             loading: false

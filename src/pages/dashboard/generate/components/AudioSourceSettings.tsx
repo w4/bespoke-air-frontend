@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { SelectedCountryVoice } from "./CountryVoiceSelector";
 
 interface Props {
     title: string,

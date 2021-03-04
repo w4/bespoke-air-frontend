@@ -14,7 +14,7 @@ function Dashboard({ match }) {
             <nav className="navbar navbar-light w-100 navbar-expand-sm bg-white shadow-sm">
                 <div className="container-fluid">
                     <Link to="/dashboard" className="navbar-brand">
-                        <img src={logo} width="48" />
+                        <img alt="Home" src={logo} width="48" />
                     </Link>
 
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
