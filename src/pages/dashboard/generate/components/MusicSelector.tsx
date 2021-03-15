@@ -1,126 +1,178 @@
 import React, { Component } from "react";
-import { optionStyles } from './common';
-import Select from 'react-select';
-import './Timeline.scss';
+import { optionStyles } from "./common";
+import Select from "react-select";
+import "./Timeline.scss";
 
 interface Props {
-    onChange?: (trackId: SelectedSong | null) => any;
-    disabled?: boolean,
-    value?: SelectedSong | null
+  onChange?: (trackId: SelectedSong | null) => void;
+  onMoodChange?: (mood: string | null) => void;
+  disabled?: boolean;
+  selected: SelectedSong | null;
+  selectedMood?: string | null;
 }
 
 export interface State {
-    musicMoods: string[],
-    selectedMusicMood: string,
-    musicForMood: { id: string, track_name: string, artist: string, file: string }[],
-    selectedMusic: SelectedSong,
+  musicMoods: string[];
+  musicForMood: {
+    id: string;
+    track_name: string;
+    artist: string;
+    file: string;
+  }[];
 }
 
 export interface SelectedSong {
-    track_name: string,
-    artist: string,
-    id: string,
-    mood: string,
-    file: string,
+  track_name: string;
+  artist: string;
+  id: string;
+  mood: string;
+  file: string;
 }
 
 export default class MusicSelector extends Component<Props, State> {
-    componentDidMount() {
-        fetch("https://dub.backend.air.bespokeonhold.com/music/list/moods")
-            .then(v => v.json())
-            .then(v => this.setState({
-                musicMoods: ["no", ...v],
-                selectedMusicMood: "no",
-            }));
+  state = {
+    musicMoods: [],
+    musicForMood: [],
+  } as State;
+
+  componentDidMount(): void {
+    fetch("https://dub.backend.air.bespokeonhold.com/music/list/moods")
+      .then((v) => v.json())
+      .then((v) => this.setState({ musicMoods: ["no", ...v] }))
+      .catch((e) => alert(e));
+
+    if (!this.props.selectedMood) {
+      this.props.onMoodChange?.("no");
+    } else if (this.props.selectedMood !== 'no') {
+      this.updateMusicList(this.props.selectedMood);
+    }
+  }
+
+  updateMusicList(mood?: string) {
+    if (!mood || mood === "no") {
+      this.props.onChange?.(null);
+      this.props.onMoodChange?.("no");
+      this.setState({ musicForMood: [] });
+      return;
     }
 
-    updateMusicList(mood?: string) {
-        if (!mood || mood === "no") {
-            if (this.props.onChange)
-                this.props.onChange(null);
-            this.setState({ musicForMood: [], selectedMusicMood: "no" });
-            return;
-        }
+    this.setState({ musicForMood: [] });
+    this.props.onMoodChange?.(mood);
+    this.props.onChange?.(null);
 
-        this.setState({ musicForMood: [], selectedMusicMood: mood });
-
-        fetch(`https://dub.backend.air.bespokeonhold.com/music/list/by-mood?mood=${encodeURIComponent(mood)}`)
-            .then(v => v.json())
-            .then(v => {
-                const songEvent = {
-                    mood,
-                    id: v[0].id,
-                    track_name: v[0].track_name,
-                    artist: v[0].artist,
-                    file: v[0].file,
-                };
-
-                if (this.props.onChange)
-                    this.props.onChange(songEvent);
-
-                this.setState({ selectedMusicMood: mood, musicForMood: v, selectedMusic: songEvent });
-            });
-    }
-
-    onSongChange(id?: string) {
-        const song = id ? this.state.musicForMood.find(v => v.id === id) || this.state.musicForMood[0] : this.state.musicForMood[0];
-
+    fetch(
+      `https://dub.backend.air.bespokeonhold.com/music/list/by-mood?mood=${encodeURIComponent(
+        mood
+      )}`
+    )
+      .then((v) => v.json())
+      .then((v) => {
         const songEvent = {
-            mood: this.state.selectedMusicMood,
-            id: song.id,
-            track_name: song.track_name,
-            artist: song.artist,
-            file: song.file,
+          mood,
+          id: v[0].id,
+          track_name: v[0].track_name,
+          artist: v[0].artist,
+          file: v[0].file,
         };
 
-        if (this.props.onChange)
-            this.props.onChange(songEvent);
+        this.props.onChange?.(songEvent);
+        this.props.onMoodChange?.(mood);
 
-        this.setState({ selectedMusic: songEvent });
+        this.setState({ musicForMood: v });
+      });
+  }
+
+  onSongChange(id?: string) {
+    const song = id
+      ? this.state.musicForMood.find((v) => v.id === id) ||
+      this.state.musicForMood[0]
+      : this.state.musicForMood[0];
+
+    const songEvent = {
+      mood: this.props.selectedMood || 'no',
+      id: song.id,
+      track_name: song.track_name,
+      artist: song.artist,
+      file: song.file,
+    };
+
+    this.props.onChange?.(songEvent);
+  }
+
+  render() {
+    let moodSelect;
+    if (!this.props.disabled) {
+      moodSelect = (
+        <Select
+          styles={optionStyles}
+          value={{
+            value: this.props.selectedMood,
+            label: this.props.selectedMood,
+          }}
+          placeholder="&nbsp; &nbsp;"
+          options={(this.state.musicMoods || []).map((v) => ({ value: v, label: v }))}
+          onChange={(e) => this.updateMusicList(e?.value || 'no')}
+        />
+      );
+    } else {
+      moodSelect = (
+        <div
+          className="d-inline-block"
+          style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
+        >
+          {this.props.selectedMood || this.props.selected?.mood}
+        </div>
+      );
     }
 
-    render() {
-        if (!this.state) {
-            return <>Loading...</>;
-        }
-
-        let moodSelect;
-        if (!this.props.disabled) {
-            moodSelect = <Select
-                styles={optionStyles}
-                value={{ value: this.state.selectedMusicMood, label: this.state.selectedMusicMood }}
-                options={this.state.musicMoods.map(v => ({ value: v, label: v }))}
-                onChange={e => this.updateMusicList(e ? e.value : undefined)}
-            />;
-        } else {
-            moodSelect = <div className="d-inline-block" style={{ padding: '6px 16px 7px 10px', color: '#707b9f' }}>{this.state.selectedMusicMood || this.props.value?.mood}</div>;
-        }
-
-        let songSelect;
-        if (!this.props.disabled) {
-            songSelect = (this.state.musicForMood || []).length > 0 ? <>
-                <Select
-                    styles={optionStyles}
-                    value={{ value: this.state.selectedMusic.id, label: `${this.state.selectedMusic.artist} - ${this.state.selectedMusic.track_name}` }}
-                    options={this.state.musicForMood.map(v => ({ value: v.id, label: `${v.artist} - ${v.track_name}` }))}
-                    onChange={e => this.onSongChange(e ? e.value : undefined)}
-                />
-                <div className="fs-6 mt-1">preview</div>
-            </> : <></>;
-        } else {
-            songSelect = this.state.selectedMusicMood === 'no'
-                ? <></>
-                : <div className="d-inline-block"
-                    style={{ padding: '6px 16px 7px 10px', color: '#707b9f' }}>
-                    {(this.props.value || this.state.selectedMusic).artist} - {(this.props.value || this.state.selectedMusic).track_name}
-                </div>;
-        }
-
-        return <>
-            I want&nbsp;
-            {moodSelect}
-            &nbsp;music to be included{this.state.selectedMusicMood === 'no' ? '.' : ':'}&nbsp;
-            {songSelect}
-        </>;
+    let songSelect;
+    if (!this.props.disabled) {
+      songSelect =
+        this.props.selectedMood !== 'no' ? (
+          <>
+            <Select
+              styles={optionStyles}
+              value={this.props.selected ? {
+                value: this.props.selected.id,
+                label: `${this.props.selected.artist} - ${this.props.selected.track_name}`,
+              } : null}
+              options={this.state.musicForMood.map((v) => ({
+                value: v.id,
+                label: `${v.artist} - ${v.track_name}`,
+              }))}
+              placeholder="&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "
+              onChange={(e) => this.onSongChange(e ? e.value : undefined)}
+            />
+            {this.props.selected ? <div className="fs-6 mt-4">
+              <audio src={this.props.selected.file} preload="none" controls />
+            </div> : <></>}
+          </>
+        ) : (
+            <></>
+          );
+    } else {
+      songSelect =
+        this.props.selectedMood === "no" ? (
+          <></>
+        ) : (
+            <div
+              className="d-inline-block"
+              style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
+            >
+              {this.props.selected?.artist} -{" "}
+              {this.props.selected?.track_name}
+            </div>
+          );
     }
+
+    return (
+      <>
+        I want&nbsp;
+        {moodSelect}
+        &nbsp;music to be included
+        {this.props.selectedMood === "no" ? "." : ":"}&nbsp;
+        {songSelect}
+      </>
+    );
+  }
 }

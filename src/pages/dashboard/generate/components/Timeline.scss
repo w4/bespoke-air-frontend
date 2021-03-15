@@ -3,6 +3,16 @@
     height: 50px;
     overflow: hidden;
 
+    &.voice-slider {
+        .slider-thumb { 
+            pointer-events: none;
+
+            &::after {
+                display: none;
+            }
+        }
+    }
+
     .value {
         position: absolute;
         color: #c9c9c9;
@@ -29,9 +39,6 @@
         cursor: pointer;
         box-sizing: border-box;
         outline: none !important;
-    }
-
-    .slider-thumb {
         top: 1px;
         width: 0px;
         height: 0px;
@@ -67,6 +74,8 @@
         transform: rotate(90deg);
         font-size: 1.9rem;
         display: block;
+        position: relative;
+        left: 1px;
     }
 
     &.blue {

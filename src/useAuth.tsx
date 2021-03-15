@@ -5,144 +5,195 @@ import firebaseConfig from "./firebaseConfig";
 
 firebase.initializeApp(firebaseConfig);
 
+interface AuthContext {
+  user: firebase.User | null | false;
+  error: string | null;
+  userPackage: number | null;
+  loading: boolean | null;
+  signin: (email: string) => Promise<void>;
+  signup: (
+    email: string,
+    password: string
+  ) => Promise<firebase.auth.UserCredential>;
+  signout: () => Promise<void>;
+  signinWithGoogle: () => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
+  confirmPasswordReset: (code: string, password: string) => Promise<void>;
+}
+
 // todo: type this
-const authContext = createContext<any>(null);
+const authContext = createContext<AuthContext | null>(null);
 
 export function ProvideAuth({ children }: { children: any }) {
-    const auth = useProvideAuth();
-    return <authContext.Provider value={auth}>{children}</authContext.Provider>;
+  const auth = useProvideAuth();
+  return <authContext.Provider value={auth}>{children}</authContext.Provider>;
 }
 
 // Hook for child components to get the auth object ...
 // ... and re-render when it changes.
-export const useAuth = () => {
-    return useContext(authContext);
+export const useAuth = (): AuthContext | null => {
+  return useContext(authContext);
 };
 
 function useProvideAuth() {
-    const [user, setUser] = useState<firebase.User | false | null>(null);
-    const [userPackage, setPackage] = useState<number | null>(null);
-    const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<firebase.User | null | false>(null);
+  const [userPackage, setPackage] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-    const updatePackage = (u: firebase.User | null) => {
-        if (!u) {
-            setPackage(null);
-            return;
-        }
+  const updatePackage = (u: firebase.User | null) => {
+    if (!u) {
+      setPackage(null);
+      return;
+    }
 
-        u.getIdTokenResult()
-            .then((result) => {
-                setPackage(result.claims.package || 0);
-            })
-            .catch((e) => {
-                // todo handle this
-                console.log(e);
-                setError("failed to fetch package");
-            });
-    };
+    u.getIdTokenResult()
+      .then((result) => {
+        setPackage(result.claims.package || 0);
+      })
+      .catch((e) => {
+        // todo handle this
+        console.log(e);
+        setError("failed to fetch package");
+      });
+  };
 
-    // Wrap any Firebase methods we want to use making sure ...
-    // ... to save the user to state.
-    const signin = (email: string) => {
-        return firebase
-            .auth()
-            .sendSignInLinkToEmail(email, {
-                handleCodeInApp: true,
-                url: window.location.href,
-                // iOS: {},
-                // android: {},
-                // dynamicLinkDomain: '',
-            })
-            .then(() => window.localStorage.setItem('emailForSignIn', email));
-    };
+  // Wrap any Firebase methods we want to use making sure ...
+  // ... to save the user to state.
+  const signin = (email: string) => {
+    setLoading(true);
 
-    const signup = (email: string, password: string) => {
-        return firebase
-            .auth()
-            .createUserWithEmailAndPassword(email, password)
-            .then(response => {
-                setUser(response.user);
-                updatePackage(response.user);
-                return response.user;
-            });
-    };
+    return firebase
+      .auth()
+      .sendSignInLinkToEmail(email, {
+        handleCodeInApp: true,
+        url: window.location.href,
+        // iOS: {},
+        // android: {},
+        // dynamicLinkDomain: '',
+      })
+      .then(() => window.localStorage.setItem("emailForSignIn", email))
+      .finally(() => setLoading(false));
+  };
 
-    const signout = () => {
-        return firebase
-            .auth()
-            .signOut()
-            .then(() => {
-                setUser(false);
-            });
-    };
+  const signinWithGoogle = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-    const sendPasswordResetEmail = (email: string) => {
-        return firebase
-            .auth()
-            .sendPasswordResetEmail(email)
-            .then(() => {
-                return true;
-            });
-    };
+    setLoading(true);
+    window.localStorage.setItem("expectingLogin", "1");
 
-    const confirmPasswordReset = (code: string, password: string) => {
-        return firebase
-            .auth()
-            .confirmPasswordReset(code, password)
-            .then(() => {
-                return true;
-            });
-    };
+    return firebase
+      .auth()
+      .signInWithRedirect(provider)
+      .catch((e: any) => setError(e.message))
+      .finally(() => setLoading(false));
+  };
 
-    useEffect(() => {
-        firebase.auth()
-            .getRedirectResult()
-            .then((result) => {
-                if (result.user) {
-                    setUser(result.user);
-                    updatePackage(result.user);
-                }
-            })
-            .catch((e) => setError(e.message));
+  const signup = (email: string, password: string) => {
+    setLoading(true);
 
-        if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
-            let email = window.localStorage.getItem('emailForSignIn');
-            while (!email) {
-                email = window.prompt('Please provide your email for confirmation');
-            }
+    return firebase
+      .auth()
+      .createUserWithEmailAndPassword(email, password)
+      .then((response) => {
+        setUser(response.user);
+        updatePackage(response.user);
+        return response;
+      })
+      .finally(() => setLoading(false));
+  };
 
-            firebase.auth().signInWithEmailLink(email, window.location.href)
-                .then((result) => {
-                    window.localStorage.removeItem('emailForSignIn');
-                    setUser(result.user);
-                    updatePackage(result.user);
-                })
-                .catch((e) => setError(e.message));
-        }
+  const signout = () => {
+    setLoading(true);
 
-        const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                setUser(user);
-                updatePackage(user);
-            } else {
-                setUser(false);
-                updatePackage(null);
-            }
-        });
+    return firebase
+      .auth()
+      .signOut()
+      .then(() => setUser(false))
+      .finally(() => setLoading(false));
+  };
 
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
-    }, []);
+  const sendPasswordResetEmail = (email: string) => {
+    setLoading(true);
 
-    // Return the user object and auth methods
-    return {
-        user,
-        error,
-        userPackage,
-        signin,
-        signup,
-        signout,
-        sendPasswordResetEmail,
-        confirmPasswordReset
-    };
+    return firebase
+      .auth()
+      .sendPasswordResetEmail(email)
+      .finally(() => setLoading(false));
+  };
+
+  const confirmPasswordReset = (code: string, password: string) => {
+    setLoading(true);
+
+    return firebase
+      .auth()
+      .confirmPasswordReset(code, password)
+      .finally(() => setLoading(true));
+  };
+
+  useEffect(() => {
+    if (window.localStorage.getItem("expectingLogin")) {
+      setLoading(true);
+      window.localStorage.removeItem("expectingLogin");
+
+      firebase
+        .auth()
+        .getRedirectResult()
+        .then((result) => {
+          if (result.user) {
+            setUser(result.user);
+            updatePackage(result.user);
+          }
+        })
+        .catch((e: Error) => setError(e.message))
+        .finally(() => setLoading(false));
+    }
+
+    if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
+      setLoading(true);
+
+      let email = window.localStorage.getItem("emailForSignIn");
+      while (!email) {
+        email = window.prompt("Please provide your email for confirmation");
+      }
+
+      firebase
+        .auth()
+        .signInWithEmailLink(email, window.location.href)
+        .then((result) => {
+          window.localStorage.removeItem("emailForSignIn");
+          setUser(result.user);
+          updatePackage(result.user);
+        })
+        .catch((e: Error) => setError(e.message))
+        .finally(() => setLoading(false));
+    }
+
+    const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+        updatePackage(user);
+      } else {
+        setUser(false);
+        updatePackage(null);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  // Return the user object and auth methods
+  return {
+    user,
+    error,
+    userPackage,
+    loading,
+    signin,
+    signinWithGoogle,
+    signup,
+    signout,
+    sendPasswordResetEmail,
+    confirmPasswordReset,
+  };
 }
