@@ -50,7 +50,7 @@ interface State {
 export class SelectedCountryVoice {
   constructor(
     public country: SelectedCountryVoiceCountrySelection,
-    public voice: SelectedCountryVoiceVoiceSelection
+    public voice: SelectedCountryVoiceVoiceSelection,
   ) { }
 
   getVoiceAsSelectElement(): SelectElement {
@@ -70,6 +70,7 @@ interface SelectedCountryVoiceVoiceSelection {
   id: string;
   name: string;
   display: JSX.Element;
+  portraitUrl: string;
 }
 
 export default class CountryVoiceSelector extends Component<Props, State> {
@@ -125,11 +126,12 @@ export default class CountryVoiceSelector extends Component<Props, State> {
           id: Object.keys(voices[defaultLanguage.value])[0],
           name: Object.values(voices[defaultLanguage.value])[0].name,
           display: Object.values(voices[defaultLanguage.value])[0].display,
+          portraitUrl: Object.values(voices[defaultLanguage.value])[0].portraitUrl,
         };
 
         const selectedCountryVoice = new SelectedCountryVoice(
           defaultLanguage,
-          defaultVoice
+          defaultVoice,
         );
 
         this.props.onChange?.(selectedCountryVoice);
@@ -162,6 +164,7 @@ export default class CountryVoiceSelector extends Component<Props, State> {
       id: selectVoice,
       name: voiceDefinition.name,
       display: voiceDefinition.display,
+      portraitUrl: voiceDefinition.portraitUrl,
     });
 
     this.props.onChange?.(selectedLanguageVoice);

@@ -61,8 +61,6 @@ function useProvideAuth() {
   // Wrap any Firebase methods we want to use making sure ...
   // ... to save the user to state.
   const signin = (email: string) => {
-    setLoading(true);
-
     return firebase
       .auth()
       .sendSignInLinkToEmail(email, {
@@ -72,8 +70,7 @@ function useProvideAuth() {
         // android: {},
         // dynamicLinkDomain: '',
       })
-      .then(() => window.localStorage.setItem("emailForSignIn", email))
-      .finally(() => setLoading(false));
+      .then(() => window.localStorage.setItem("emailForSignIn", email));
   };
 
   const signinWithGoogle = () => {

@@ -3,6 +3,7 @@ import React, { Component } from "react";
 interface Props {
   title: string;
   onChange?: (state: State) => any;
+  disabled?: boolean;
 }
 
 export interface State {
@@ -45,6 +46,7 @@ export default class AudioSourceSettings extends Component<Props, State> {
                 min={0}
                 max={10}
                 step={0.1}
+                disabled={!!this.props.disabled}
                 value={this.state.volume}
                 onChange={(e) =>
                   this.updateStateAndSendEvent({

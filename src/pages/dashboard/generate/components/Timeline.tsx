@@ -3,16 +3,20 @@ import ReactSlider from "react-slider";
 import AudioManipulation, { Audio } from "../../../../lib/AudioManipulation";
 import { SelectedSong } from "./MusicSelector";
 import { MdRecordVoiceOver, MdMusicNote } from "react-icons/md";
+import {SelectedCountryVoice} from "./CountryVoiceSelector";
 
 interface Props {
   selectedSong: SelectedSong | null;
+  selectedVoice: SelectedCountryVoice;
   manipulater: AudioManipulation;
+  timeStarted: Date | null;
 }
 
 interface State {
   voiceTrackPosition: [number, number][];
   musicTrackPosition: [number, number];
   movingTrack: number | false;
+  currentTimeAsString?: string;
 }
 
 const SONG_TRACK_ID = 999;
@@ -24,6 +28,7 @@ export default class Timeline extends Component<Props, State> {
     voiceTrackPosition: [],
   } as State;
 
+  private requestRef: React.MutableRefObject<any> = React.createRef();
   private voiceTrackRefs: any[] = [];
   private musicTrackRef: Ref<any> = React.createRef();
 
@@ -135,11 +140,27 @@ export default class Timeline extends Component<Props, State> {
   async componentDidMount() {
     document.addEventListener("mouseup", this.stopMovingTrack.bind(this));
     document.addEventListener("mousemove", this.moveTrack.bind(this));
+    this.requestRef.current = requestAnimationFrame(this.updateTimer.bind(this));
   }
 
   componentWillUnmount() {
     document.removeEventListener("mouseup", this.stopMovingTrack.bind(this));
     document.removeEventListener("mousemove", this.moveTrack.bind(this));
+
+    cancelAnimationFrame(this.requestRef.current);
+  }
+
+  dateToSeconds(date: Date) { return date.toISOString().substr(11, 8); }
+
+  updateTimer() {
+    this.requestRef.current = requestAnimationFrame(this.updateTimer.bind(this));
+
+    if (this.props.timeStarted) {
+      const currentTimeAsString = this.dateToSeconds(new Date(new Date().getTime() - this.props.timeStarted.getTime()));
+      this.setState({ currentTimeAsString });
+    } else if (this.state.currentTimeAsString) {
+      this.setState({ currentTimeAsString: undefined });
+    }
   }
 
   render() {
@@ -156,7 +177,7 @@ export default class Timeline extends Component<Props, State> {
               color: '#4CAF50'
             }}
           >
-            <MdRecordVoiceOver />
+            <img alt={this.props.selectedVoice.voice.name} src={this.props.selectedVoice.voice.portraitUrl} style={{ width: "2rem" }} />
           </div>
           <ReactSlider
             ref={(e) => {
@@ -165,7 +186,7 @@ export default class Timeline extends Component<Props, State> {
             className="horizontal-slider voice-slider"
             thumbClassName="slider-thumb"
             trackClassName="slider-track"
-            max={Math.ceil(this.props.manipulater.getMaxPossibleDuration())}
+            max={this.props.manipulater.getMaxPossibleDuration()}
             defaultValue={[
               props.audio.effects.offsetSecs,
               props.audio.buffer.duration + props.audio.effects.offsetSecs,
@@ -178,7 +199,7 @@ export default class Timeline extends Component<Props, State> {
             renderThumb={(props: any, state: any) => (
               <div {...props}>
                 <div className="value">
-                  {new Date(state.valueNow * 1000).toISOString().substr(11, 8)}
+                  {this.dateToSeconds(new Date(state.valueNow * 1000))}
                 </div>
               </div>
             )}
@@ -199,9 +220,34 @@ export default class Timeline extends Component<Props, State> {
       );
     };
 
+    const durationPercentage = this.props.timeStarted ? (
+        (new Date().getTime() - this.props.timeStarted.getTime())
+          / (this.props.manipulater.getMaxDuration() * 1000)
+    ) * 100 : 0;
+    const durationAsString = this.dateToSeconds(new Date(this.props.manipulater.getMaxDuration() * 1000));
+
     return this.props.manipulater.music || this.props.manipulater.tts.length ? (
       <div className="mt-3 card shadow-sm overflow-hidden border-0 rounded">
-        <div className="card-body">
+        <div className="card-body position-relative">
+          <div className="text-end text-black-50"
+               style={{
+                 fontSize: ".75rem",
+                 color: "#707b9f",
+               }}>
+            {this.state.currentTimeAsString || "00:00:00"}/{durationAsString}
+          </div>
+
+          {this.props.timeStarted ?
+            <div className="position-absolute h-100 w-100" style={{paddingLeft: '3.3rem', paddingRight: '2rem', zIndex: 100}}>
+              <div style={{
+                position: "relative",
+                width: "1px",
+                height: "100%",
+                background: "red",
+                marginLeft: `${durationPercentage}%`
+              }} />
+            </div> : <></>}
+
           {this.props.manipulater.tts.map((v, id) => (
             <VoiceSlider key={id} id={id} audio={v} />
           ))}

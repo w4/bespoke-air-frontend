@@ -1,5 +1,5 @@
 export class Audio {
-  constructor(public buffer: AudioBuffer, public effects: Effects) { }
+  constructor(public buffer: AudioBuffer, public effects: Effects, public text?: string) { }
 
   public getLength() {
     return (
@@ -23,12 +23,12 @@ export default class AudioManipulation {
     this.context = new AudioContext();
   }
 
-  async pushNewTts(buffer: ArrayBuffer) {
+  async pushNewTts(buffer: ArrayBuffer, text: string) {
     const audio = await this.context.decodeAudioData(buffer);
     const effects = new Effects();
     effects.offsetSecs = this.getVoiceDuration();
     effects.duration = audio.duration;
-    this.tts.push(new Audio(audio, effects));
+    this.tts.push(new Audio(audio, effects, text));
   }
 
   async decodeMusic() {

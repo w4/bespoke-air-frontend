@@ -21,6 +21,7 @@ interface State {
   loading: boolean;
   rendering: boolean;
   isPlaying: boolean;
+  timeStarted: Date | null;
 }
 
 export default class EditingControls extends Component<Props, State> {
@@ -34,6 +35,7 @@ export default class EditingControls extends Component<Props, State> {
     loading: true,
     rendering: false,
     isPlaying: false,
+    timeStarted: null,
   };
 
   async componentDidMount() {
@@ -53,6 +55,7 @@ export default class EditingControls extends Component<Props, State> {
     this.setState({
       loading: false,
       isPlaying: false,
+      timeStarted: null,
     });
   }
 
@@ -80,7 +83,7 @@ export default class EditingControls extends Component<Props, State> {
         v.arrayBuffer()
       );
 
-      await this.audioManipulation?.pushNewTts(voice);
+      await this.audioManipulation?.pushNewTts(voice, text);
 
       this.forceUpdate();
     } catch (e) {
@@ -111,8 +114,8 @@ export default class EditingControls extends Component<Props, State> {
     this.playingBuffer.buffer = buffer;
     this.playingBuffer.connect(this.audioContext.destination);
     this.playingBuffer.start();
-    this.setState({ isPlaying: true });
-    this.playingBuffer.addEventListener("ended", () => this.setState({ isPlaying: false }));
+    this.setState({ isPlaying: true, timeStarted: new Date() });
+    this.playingBuffer.addEventListener("ended", () => this.setState({ isPlaying: false, timeStarted: null }));
   }
 
   render() {
@@ -127,7 +130,7 @@ export default class EditingControls extends Component<Props, State> {
             className="btn btn-primary btn-lg"
             onClick={async () => {
               await this.playingBuffer?.stop();
-              this.setState({ isPlaying: false });
+              this.setState({ isPlaying: false, timeStarted: null, });
             }}
           >
             <IoIosPause /> Stop
@@ -175,8 +178,10 @@ export default class EditingControls extends Component<Props, State> {
           </div>
 
           <Timeline
+            selectedVoice={this.props.selectedVoice}
             manipulater={this.audioManipulation}
             selectedSong={this.props.selectedMusic}
+            timeStarted={this.state.timeStarted}
           />
 
           <div className="row text-secondary">
@@ -185,12 +190,14 @@ export default class EditingControls extends Component<Props, State> {
               onChange={(voiceSettings) =>
                 this.setState({ ...this.state, voiceSettings })
               }
+              disabled={this.state.isPlaying}
             />
             <AudioSourceSettings
               title="Music Settings"
               onChange={(musicSettings) =>
                 this.setState({ ...this.state, musicSettings })
               }
+              disabled={this.state.isPlaying}
             />
           </div>
 
