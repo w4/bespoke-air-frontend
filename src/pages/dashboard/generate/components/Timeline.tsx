@@ -3,13 +3,15 @@ import ReactSlider from "react-slider";
 import AudioManipulation, { Audio } from "../../../../lib/AudioManipulation";
 import { SelectedSong } from "./MusicSelector";
 import { MdRecordVoiceOver, MdMusicNote } from "react-icons/md";
-import {SelectedCountryVoice} from "./CountryVoiceSelector";
+import { SelectedCountryVoice } from "./CountryVoiceSelector";
 
 interface Props {
   selectedSong: SelectedSong | null;
+  editingTtsTrack: number | null;
   selectedVoice: SelectedCountryVoice;
   manipulater: AudioManipulation;
   timeStarted: Date | null;
+  onClickTts: (id: number) => void;
 }
 
 interface State {
@@ -163,66 +165,22 @@ export default class Timeline extends Component<Props, State> {
     }
   }
 
-  render() {
-    const VoiceSlider = (props: { id: number; audio: Audio }) => {
-      const sliderId = props.id;
-      return (
-        <div className="d-flex">
-          <div
-            style={{
-              fontSize: "2rem",
-              paddingRight: "10px",
-              marginRight: "10px",
-              borderRight: "1px solid #181d45",
-              color: '#4CAF50'
-            }}
-          >
-            <img alt={this.props.selectedVoice.voice.name} src={this.props.selectedVoice.voice.portraitUrl} style={{ width: "2rem" }} />
-          </div>
-          <ReactSlider
-            ref={(e) => {
-              this.voiceTrackRefs[props.id] = e;
-            }}
-            className="horizontal-slider voice-slider"
-            thumbClassName="slider-thumb"
-            trackClassName="slider-track"
-            max={this.props.manipulater.getMaxPossibleDuration()}
-            defaultValue={[
-              props.audio.effects.offsetSecs,
-              props.audio.buffer.duration + props.audio.effects.offsetSecs,
-            ]}
-            value={this.state.voiceTrackPosition[props.id]}
-            // onChange={(n: any) => props.audio.effects.offsetSecs = n[0]}
-            ariaLabel={["Voice start", "Voice end"]}
-            ariaValuetext={(state: any) => `Thumb value ${state.valueNow}`}
-            step={0.0000000000000001}
-            renderThumb={(props: any, state: any) => (
-              <div {...props}>
-                <div className="value">
-                  {this.dateToSeconds(new Date(state.valueNow * 1000))}
-                </div>
-              </div>
-            )}
-            renderTrack={(props: any, state: any) =>
-              state.index === 1 ? (
-                <div
-                  {...props}
-                  onMouseDown={(e) => this.setState({ movingTrack: sliderId })}
-                />
-              ) : (
-                  <div {...props} />
-                )
-            }
-            snapDragDisabled={true}
-            pearling
-          />
-        </div>
-      );
-    };
+  resetLengthOfTtsTrack(track: number) {
+    const audio = this.props.manipulater.tts[track];
 
+    const newVoiceTrackPosition = this.state.voiceTrackPosition;
+    newVoiceTrackPosition[track] = [
+      audio.effects.offsetSecs,
+      audio.buffer.duration + audio.effects.offsetSecs,
+    ];
+
+    this.setState({ voiceTrackPosition: newVoiceTrackPosition });
+  }
+
+  render() {
     const durationPercentage = this.props.timeStarted ? (
-        (new Date().getTime() - this.props.timeStarted.getTime())
-          / (this.props.manipulater.getMaxDuration() * 1000)
+      (new Date().getTime() - this.props.timeStarted.getTime())
+      / (this.props.manipulater.getMaxDuration() * 1000)
     ) * 100 : 0;
     const durationAsString = this.dateToSeconds(new Date(this.props.manipulater.getMaxDuration() * 1000));
 
@@ -230,15 +188,15 @@ export default class Timeline extends Component<Props, State> {
       <div className="mt-3 card shadow-sm overflow-hidden border-0 rounded">
         <div className="card-body position-relative">
           <div className="text-end text-black-50"
-               style={{
-                 fontSize: ".75rem",
-                 color: "#707b9f",
-               }}>
+            style={{
+              fontSize: ".75rem",
+              color: "#707b9f",
+            }}>
             {this.state.currentTimeAsString || "00:00:00"}/{durationAsString}
           </div>
 
           {this.props.timeStarted ?
-            <div className="position-absolute h-100 w-100" style={{paddingLeft: '3.3rem', paddingRight: '2rem', zIndex: 100}}>
+            <div className="position-absolute h-100 w-100" style={{ paddingLeft: '3.3rem', paddingRight: '2rem', zIndex: 100, top: 0 }}>
               <div style={{
                 position: "relative",
                 width: "1px",
@@ -248,8 +206,61 @@ export default class Timeline extends Component<Props, State> {
               }} />
             </div> : <></>}
 
-          {this.props.manipulater.tts.map((v, id) => (
-            <VoiceSlider key={id} id={id} audio={v} />
+          {this.props.manipulater.tts.map((audio, id) => (
+            <div className="d-flex" key={id}>
+              <div
+                style={{
+                  fontSize: "2rem",
+                  paddingRight: "10px",
+                  marginRight: "10px",
+                  borderRight: "1px solid #181d45",
+                  color: "#4CAF50",
+                }}
+              >
+                <img onClick={() => this.props.onClickTts(id)}
+                  alt={this.props.selectedVoice.voice.name}
+                  src={this.props.selectedVoice.voice.portraitUrl}
+                  style={{ width: "2rem", cursor: "pointer" }}
+                />
+              </div>
+              <ReactSlider
+                ref={(e) => {
+                  this.voiceTrackRefs[id] = e;
+                }}
+                className={`horizontal-slider voice-slider ${this.props.editingTtsTrack === id ? 'voice-slider-editing' : ''}`}
+                thumbClassName="slider-thumb"
+                trackClassName="slider-track"
+                max={this.props.manipulater.getMaxPossibleDuration()}
+                defaultValue={[
+                  audio.effects.offsetSecs,
+                  audio.buffer.duration + audio.effects.offsetSecs,
+                ]}
+                value={this.state.voiceTrackPosition[id]}
+                // onChange={(n: any) => props.audio.effects.offsetSecs = n[0]}
+                ariaLabel={["Voice start", "Voice end"]}
+                ariaValuetext={(state: any) => `Thumb value ${state.valueNow}`}
+                step={0.0000000000000001}
+                renderThumb={(props: any, state: any) => (
+                  <div {...props}>
+                    <div className="value">
+                      {this.dateToSeconds(new Date(state.valueNow * 1000))}
+                    </div>
+                  </div>
+                )}
+                renderTrack={(props: any, state: any) =>
+                  state.index === 1 ? (
+                    <div
+                      {...props}
+                      onMouseDown={(e) => this.setState({ movingTrack: id })}
+                    />
+                  ) : (
+                      <div {...props} />
+                    )
+                }
+                snapDragDisabled={true}
+                pearling
+              />
+            </div>
           ))}
 
           {this.props.selectedSong ? (

@@ -43,7 +43,7 @@ function Dashboard({ match }) {
                   Home
                 </NavLink>
               </li>
-              <li className="nav-item">
+              {/*<li className="nav-item">
                 <NavLink
                   to={match.url + "/settings"}
                   className="nav-link"
@@ -51,7 +51,7 @@ function Dashboard({ match }) {
                 >
                   Settings
                 </NavLink>
-              </li>
+              </li>*/}
             </ul>
 
             <div>
@@ -60,7 +60,7 @@ function Dashboard({ match }) {
                 className="btn"
                 onClick={(e) => auth.signout()}
               >
-                <FiLogOut />
+                Log out <FiLogOut />
               </button>
             </div>
           </div>

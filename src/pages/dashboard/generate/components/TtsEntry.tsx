@@ -2,24 +2,23 @@ import React, { Component } from "react";
 import { SelectedCountryVoice } from "./CountryVoiceSelector";
 
 interface Props {
-  onChange?: (text: string) => any;
-  onEnter?: (text: string) => any;
+  onChange: (text: string) => any;
+  onEnter: () => any;
+  onCancel?: () => any;
+  onDelete?: () => any;
+  showCancelDeleteButtons?: boolean;
   selectedVoice?: SelectedCountryVoice;
   disabled?: boolean;
-  value?: string;
+  value: string;
   className?: string;
 }
 
 interface State {
-  text: string;
-  currentCharacters: number;
   allowedCharacters: number;
 }
 
-export default class CountryVoiceSelector extends Component<Props, State> {
+export default class TtsEntry extends Component<Props, State> {
   state = {
-    text: "",
-    currentCharacters: 0,
     allowedCharacters: 500,
   };
 
@@ -27,13 +26,12 @@ export default class CountryVoiceSelector extends Component<Props, State> {
     return (
       <div className={this.props.className} style={{ position: "relative" }}>
         <textarea
-          className={`form-control shadow-sm border-0 rounded p-3 ${
-            this.props.disabled ? "disabled" : ""
-          }`}
+          className={`form-control shadow-sm border-0 rounded p-3 ${this.props.disabled ? "disabled" : ""
+            }`}
           rows={9}
           disabled={this.props.disabled || false}
           style={this.props.disabled ? { color: "#878787" } : {}}
-          value={this.state ? this.state.text : "" || this.props.value}
+          value={this.props.value}
           placeholder={
             this.props.selectedVoice
               ? `Please type what you would like ${this.props.selectedVoice.voice.name} to say and press enter.`
@@ -45,19 +43,29 @@ export default class CountryVoiceSelector extends Component<Props, State> {
             }
 
             if (this.props.onChange) this.props.onChange(e.target.value);
-            this.setState({
-              currentCharacters: e.target.value.length,
-              text: e.target.value,
-            });
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && this.props.onEnter) {
               e.preventDefault();
-              this.props.onEnter(this.state.text);
-              this.setState({ currentCharacters: 0, text: "" });
+              this.props.onEnter();
+            } else if (e.key == "Escape" && this.props.onCancel) {
+              e.preventDefault();
+              this.props.onCancel();
             }
           }}
         />
+
+        {this.props.showCancelDeleteButtons ? (
+          <div style={{ position: "absolute", right: "1.2rem", top: ".25rem", fontSize: ".75rem" }}>
+            <a href="#" onClick={() => this.props.onCancel?.()}>
+              Cancel
+            </a>
+
+            <a href="#" className="ms-2 text-danger" onClick={() => this.props.onDelete?.()}>
+              Delete
+            </a>
+          </div>
+        ) : <></>}
 
         <div
           style={{
@@ -68,7 +76,7 @@ export default class CountryVoiceSelector extends Component<Props, State> {
             color: "#707b9f",
           }}
         >
-          {this.state.currentCharacters}/{this.state.allowedCharacters}
+          {this.props.value.length}/{this.state.allowedCharacters}
         </div>
       </div>
     );

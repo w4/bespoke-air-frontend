@@ -19,7 +19,7 @@ export default class AudioManipulation {
   public tts: Audio[] = [];
   public music?: Audio;
 
-  constructor(private musicBuffer?: ArrayBuffer) {
+  constructor(public musicBuffer?: ArrayBuffer) {
     this.context = new AudioContext();
   }
 
@@ -29,6 +29,14 @@ export default class AudioManipulation {
     effects.offsetSecs = this.getVoiceDuration();
     effects.duration = audio.duration;
     this.tts.push(new Audio(audio, effects, text));
+  }
+
+  async pushReplacementTts(id: number, buffer: ArrayBuffer, text: string) {
+    const audio = await this.context.decodeAudioData(buffer);
+    const effects = new Effects();
+    effects.duration = audio.duration;
+    effects.offsetSecs = this.tts[id]?.effects.offsetSecs || 0;
+    this.tts[id] = new Audio(audio, effects, text);
   }
 
   async decodeMusic() {
@@ -96,8 +104,7 @@ export default class AudioManipulation {
     }
 
     const end = window.performance.now();
-    console.log("Average time:");
-    console.log((end - start) / 10);
+    console.log("Time took to render:", end - start);
 
     return finalMix;
   }

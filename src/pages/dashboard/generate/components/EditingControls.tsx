@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Ref } from "react";
 import AudioSourceSettings from "./AudioSourceSettings";
 import { SelectedCountryVoice } from "./CountryVoiceSelector";
 import { SelectedSong } from "./MusicSelector";
@@ -9,10 +9,13 @@ import TtsEntry from "./TtsEntry";
 import { BASE_URL } from "../../../../Stage";
 import { IoIosPlay, IoIosPause } from "react-icons/io";
 import { BeatLoader } from "react-spinners";
+import "./EditingControls.scss";
+import { Modal, Button } from "react-bootstrap";
 
 interface Props {
   selectedVoice: SelectedCountryVoice;
   selectedMusic: SelectedSong | null;
+  audioManipulation: AudioManipulation;
 }
 
 interface State {
@@ -22,12 +25,16 @@ interface State {
   rendering: boolean;
   isPlaying: boolean;
   timeStarted: Date | null;
+  ttsText: string;
+  editingTts: number | null;
+  isGeneratingText: boolean;
+  showDeleteDialog: boolean;
 }
 
 export default class EditingControls extends Component<Props, State> {
-  private audioManipulation?: AudioManipulation;
   private audioContext: AudioContext = new AudioContext();
   private playingBuffer?: AudioBufferSourceNode;
+  private timelineRef: React.RefObject<Timeline> = React.createRef();
 
   state = {
     voiceSettings: { volume: 5, pitch: 0, tempo: 0 },
@@ -36,6 +43,10 @@ export default class EditingControls extends Component<Props, State> {
     rendering: false,
     isPlaying: false,
     timeStarted: null,
+    ttsText: "",
+    isGeneratingText: false,
+    editingTts: null,
+    showDeleteDialog: false,
   };
 
   async componentDidMount() {
@@ -49,8 +60,8 @@ export default class EditingControls extends Component<Props, State> {
       );
     }
 
-    this.audioManipulation = new AudioManipulation(musicBytes);
-    await this.audioManipulation.decodeMusic();
+    this.props.audioManipulation.musicBuffer = musicBytes;
+    await this.props.audioManipulation.decodeMusic();
 
     this.setState({
       loading: false,
@@ -63,14 +74,16 @@ export default class EditingControls extends Component<Props, State> {
     await this.playingBuffer?.stop();
   }
 
-  async pushNewTts(text: string) {
+  async pushNewTts() {
     const request = {
-      text,
+      text: this.state.ttsText,
       language: this.props.selectedVoice.country.value,
       voice: this.props.selectedVoice.voice.id,
     };
 
     try {
+      this.setState({ isGeneratingText: true });
+
       const generateResponse = await fetch(BASE_URL + "/generate", {
         method: "POST",
         headers: {
@@ -83,28 +96,39 @@ export default class EditingControls extends Component<Props, State> {
         v.arrayBuffer()
       );
 
-      await this.audioManipulation?.pushNewTts(voice, text);
+      if (this.state.editingTts !== null) {
+        const track = this.state.editingTts || 0;
 
-      this.forceUpdate();
+        if (this.state.ttsText != this.props.audioManipulation.tts[track]?.text) {
+          await this.props.audioManipulation.pushReplacementTts(track, voice, this.state.ttsText);
+          this.timelineRef.current?.resetLengthOfTtsTrack(track);
+        }
+      } else {
+        await this.props.audioManipulation.pushNewTts(voice, this.state.ttsText);
+      }
+
+      this.setState({ ttsText: "", editingTts: null });
     } catch (e) {
-      alert("TODO: failed to grab voice " + JSON.stringify(e));
+      alert("TODO: failed to grab voice " + e);
+    } finally {
+      this.setState({ isGeneratingText: false });
     }
   }
 
   async play() {
     await this.playingBuffer?.stop();
 
-    if (this.audioManipulation?.music) {
-      this.audioManipulation.music.effects.volume =
+    if (this.props.audioManipulation.music) {
+      this.props.audioManipulation.music.effects.volume =
         this.state.musicSettings.volume / 5;
     }
 
-    if (this.audioManipulation?.tts) {
-      for (const tts of this.audioManipulation.tts)
+    if (this.props.audioManipulation.tts) {
+      for (const tts of this.props.audioManipulation.tts)
         tts.effects.volume = this.state.voiceSettings.volume / 5;
     }
 
-    const buffer = this.audioManipulation?.render();
+    const buffer = this.props.audioManipulation.render();
 
     if (!buffer) {
       return;
@@ -116,6 +140,21 @@ export default class EditingControls extends Component<Props, State> {
     this.playingBuffer.start();
     this.setState({ isPlaying: true, timeStarted: new Date() });
     this.playingBuffer.addEventListener("ended", () => this.setState({ isPlaying: false, timeStarted: null }));
+  }
+
+  handleDeleteTtsLayer() {
+    if (this.state.editingTts === null) {
+      this.setState({ showDeleteDialog: false });
+      return;
+    }
+
+    delete this.props.audioManipulation.tts[this.state.editingTts || 0];
+
+    this.setState({
+      editingTts: null,
+      ttsText: "",
+      showDeleteDialog: false,
+    });
   }
 
   render() {
@@ -136,7 +175,7 @@ export default class EditingControls extends Component<Props, State> {
             <IoIosPause /> Stop
           </button>
         )
-      } else if (this.audioManipulation?.tts.length) {
+      } else if (this.props.audioManipulation.tts.length) {
         return (
           <button
             className="btn btn-primary btn-lg"
@@ -163,49 +202,81 @@ export default class EditingControls extends Component<Props, State> {
       }
     }
 
-    if (!this.state || this.state.loading || !this.audioManipulation) {
+    if (!this.state || this.state.loading) {
       return <div className="text-center mt-5">
         <BeatLoader color="#36D7B7" size={10} />
       </div>;
-    } else {
-      return (
-        <>
-          <div className="row mt-3">
-            <TtsEntry
-              selectedVoice={this.props.selectedVoice}
-              onEnter={(e) => this.pushNewTts(e)}
-            />
-          </div>
+    }
 
-          <Timeline
+    return (
+      <>
+        <Modal centered show={this.state.showDeleteDialog} onHide={() => this.setState({ showDeleteDialog: false })}>
+          <Modal.Header closeButton>
+            <Modal.Title>Are you sure?</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Are you sure you wish to delete this text layer?
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => this.setState({ showDeleteDialog: false })}>
+              Close
+            </Button>
+            <Button variant="danger" onClick={() => this.handleDeleteTtsLayer()}>
+              Delete
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        <div className="row mt-3 position-relative">
+          <TtsEntry
             selectedVoice={this.props.selectedVoice}
-            manipulater={this.audioManipulation}
-            selectedSong={this.props.selectedMusic}
-            timeStarted={this.state.timeStarted}
+            onEnter={() => this.pushNewTts()}
+            onChange={(v) => this.setState({ ttsText: v })}
+            onCancel={() => this.state.editingTts !== null ? this.setState({ ttsText: "", editingTts: null }) : null}
+            onDelete={() => this.setState({ showDeleteDialog: true })}
+            showCancelDeleteButtons={this.state.editingTts !== null}
+            value={this.state.ttsText}
+            disabled={this.state.isGeneratingText}
           />
 
-          <div className="row text-secondary">
-            <AudioSourceSettings
-              title="Voice Settings"
-              onChange={(voiceSettings) =>
-                this.setState({ ...this.state, voiceSettings })
-              }
-              disabled={this.state.isPlaying}
-            />
-            <AudioSourceSettings
-              title="Music Settings"
-              onChange={(musicSettings) =>
-                this.setState({ ...this.state, musicSettings })
-              }
-              disabled={this.state.isPlaying}
-            />
-          </div>
+          {this.state.isGeneratingText ? <div className="position-absolute h-100 w-100 text-center">
+            <div className="position-relative" style={{ top: '50%' }}>
+              <BeatLoader color="#36D7B7" size={10} />
+            </div>
+          </div> : <></>}
+        </div>
 
-          <div className="mt-3">
-            <DrawPlayButton />
-          </div>
-        </>
-      );
-    }
+        <Timeline
+          ref={this.timelineRef}
+          selectedVoice={this.props.selectedVoice}
+          manipulater={this.props.audioManipulation}
+          selectedSong={this.props.selectedMusic}
+          timeStarted={this.state.timeStarted}
+          editingTtsTrack={this.state.editingTts}
+          onClickTts={(id) => this.setState({ editingTts: id, ttsText: this.props.audioManipulation.tts[id].text || "" })}
+        />
+
+        <div className="row text-secondary">
+          <AudioSourceSettings
+            title="Voice Settings"
+            onChange={(voiceSettings) =>
+              this.setState({ ...this.state, voiceSettings })
+            }
+            disabled={this.state.isPlaying}
+          />
+          <AudioSourceSettings
+            title="Music Settings"
+            onChange={(musicSettings) =>
+              this.setState({ ...this.state, musicSettings })
+            }
+            disabled={this.state.isPlaying}
+          />
+        </div>
+
+        <div className="mt-3">
+          <DrawPlayButton />
+        </div>
+      </>
+    );
   }
 }

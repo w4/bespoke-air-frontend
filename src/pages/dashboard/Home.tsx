@@ -9,6 +9,9 @@ import MusicSelector, {
 import EditingControls from "./generate/components/EditingControls";
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa";
 import { AiOutlineDownload } from "react-icons/ai";
+import AudioManipulation from "../../lib/AudioManipulation";
+import { Modal, Button } from "react-bootstrap";
+import toWav from "audiobuffer-to-wav";
 
 interface Props { }
 
@@ -17,6 +20,7 @@ interface State {
   selectedMusic: SelectedSong | null;
   selectedMood: string | null;
   selectedVoice: SelectedCountryVoice | null;
+  showStepZeroAreYouSure: boolean;
 }
 
 class GenerateVoiceover extends Component<Props, State> {
@@ -25,11 +29,44 @@ class GenerateVoiceover extends Component<Props, State> {
     selectedMood: null,
     selectedMusic: null,
     selectedVoice: null,
+    showStepZeroAreYouSure: false,
   };
 
+  private audioManipulation: AudioManipulation = new AudioManipulation(undefined);
+
+  goToStepZero() {
+    if (this.audioManipulation.tts.length == 0) {
+      this.setState({ step: 0 });
+      return;
+    }
+
+    this.setState({ showStepZeroAreYouSure: true });
+  }
+
+  continueToStepZero() {
+    this.audioManipulation.tts = [];
+    this.setState({ step: 0, showStepZeroAreYouSure: false });
+  }
+
+  async doDownload() {
+    const buffer = toWav(this.audioManipulation.render());
+
+    const url = URL.createObjectURL(new Blob([buffer]));
+    const link = document.createElement('a');
+    link.href = url;
+
+    link.setAttribute('download', `Air Voiceover ${new Date().toLocaleString().replace("/", "_")}.wav`);
+
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+  }
+
   render() {
+    let stepContent;
+
     if (this.state && this.state.step === 0) {
-      return (
+      stepContent = (
         <>
           <div className="display-4 text-shadow row">
             <div className="col-md-6 border-md-end pe-md-5">
@@ -54,12 +91,12 @@ class GenerateVoiceover extends Component<Props, State> {
         </>
       );
     } else if (this.state && this.state.step === 1) {
-      return (
+      stepContent = (
         <>
           <div className="display-4 text-shadow row">
             <div
               style={{ color: "#d9d9d9", cursor: "pointer" }}
-              onClick={() => this.setState({ step: 0 })}
+              onClick={() => this.goToStepZero()}
               className="col-md-6 border-md-end pe-md-5"
             >
               <CountryVoiceSelector
@@ -80,7 +117,7 @@ class GenerateVoiceover extends Component<Props, State> {
                   type="button"
                   className="btn btn-dark btn-lg shadow-sm"
                   style={{ marginRight: "10px" }}
-                  onClick={(e) => this.setState({ step: 0 })}
+                  onClick={(e) => this.goToStepZero()}
                 >
                   <FaArrowLeft /> Back
                 </button>
@@ -97,12 +134,12 @@ class GenerateVoiceover extends Component<Props, State> {
         </>
       );
     } else if (this.state && this.state.step === 2) {
-      return (
+      stepContent = (
         <>
           <div className="display-4 text-shadow row">
             <div
               style={{ color: "#d9d9d9", cursor: "pointer" }}
-              onClick={() => this.setState({ step: 0 })}
+              onClick={() => this.goToStepZero()}
               className="col-md-6 border-md-end pe-md-5"
             >
               <CountryVoiceSelector
@@ -123,6 +160,7 @@ class GenerateVoiceover extends Component<Props, State> {
           <EditingControls
             selectedVoice={this.state.selectedVoice as any}
             selectedMusic={this.state.selectedMusic}
+            audioManipulation={this.audioManipulation}
           />
 
           <div className="mt-5">
@@ -134,18 +172,40 @@ class GenerateVoiceover extends Component<Props, State> {
             >
               <FaArrowLeft /> Back
             </button>
-            {/*<button
+            <button
               type="button"
               className="btn btn-success btn-lg shadow-sm"
+              onClick={() => this.doDownload()}
             >
               <AiOutlineDownload /> Complete
-            </button>*/}
+            </button>
           </div>
         </>
       );
     } else {
       return <div>Loading...</div>;
     }
+
+    return <>
+      <Modal centered show={this.state.showStepZeroAreYouSure} onHide={() => this.setState({ showStepZeroAreYouSure: false })}>
+        <Modal.Header closeButton>
+          <Modal.Title>Are you sure?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Your voice layers will be removed by going back to the select a voice step, are you sure you wish to continue?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => this.setState({ showStepZeroAreYouSure: false })}>
+            Close
+          </Button>
+          <Button variant="danger" onClick={() => this.continueToStepZero()}>
+            Continue
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {stepContent}
+    </>;
   }
 }
 
