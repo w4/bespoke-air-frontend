@@ -69,7 +69,7 @@ export default class AudioManipulation {
   private getMaxPossibleLength() {
     return Math.max(
       this.music ? this.music.getLength() : 0,
-      this.getVoiceDuration() * this.tts[0].buffer.sampleRate
+      this.getVoiceDuration() * Object.values(this.tts)[0].buffer.sampleRate
     );
   }
 
@@ -77,7 +77,7 @@ export default class AudioManipulation {
     const finalMix = this.context.createBuffer(
       2,
       this.getMaxPossibleLength(),
-      this.tts[0].buffer.sampleRate
+      Object.values(this.tts)[0].buffer.sampleRate
     );
 
     const start = window.performance.now();

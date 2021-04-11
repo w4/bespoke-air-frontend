@@ -16,6 +16,7 @@ interface Props {
   selectedVoice: SelectedCountryVoice;
   selectedMusic: SelectedSong | null;
   audioManipulation: AudioManipulation;
+  onIsReadyToRenderChange: (state: boolean) => void;
 }
 
 interface State {
@@ -50,6 +51,8 @@ export default class EditingControls extends Component<Props, State> {
   };
 
   async componentDidMount() {
+    this.props.onIsReadyToRenderChange(false);
+
     this.playingBuffer?.stop();
 
     let musicBytes = undefined;
@@ -73,6 +76,8 @@ export default class EditingControls extends Component<Props, State> {
       if (this.props.audioManipulation.music)
         this.props.audioManipulation.music.text = this.props.selectedMusic.id;
     }
+
+    this.props.onIsReadyToRenderChange(!!Object.keys(this.props.audioManipulation.tts).length);
 
     this.setState({
       loading: false,
@@ -119,6 +124,7 @@ export default class EditingControls extends Component<Props, State> {
       }
 
       this.setState({ ttsText: "", editingTts: null });
+      this.props.onIsReadyToRenderChange(true);
     } catch (e) {
       alert("TODO: failed to grab voice " + e);
     } finally {
@@ -135,7 +141,7 @@ export default class EditingControls extends Component<Props, State> {
     }
 
     if (this.props.audioManipulation.tts) {
-      for (const tts of this.props.audioManipulation.tts)
+      for (const tts of Object.values(this.props.audioManipulation.tts))
         tts.effects.volume = this.state.voiceSettings.volume / 5;
     }
 
@@ -166,6 +172,10 @@ export default class EditingControls extends Component<Props, State> {
       ttsText: "",
       showDeleteDialog: false,
     });
+
+    if (Object.keys(this.props.audioManipulation.tts).length === 0) {
+      this.props.onIsReadyToRenderChange(false);
+    }
   }
 
   render() {
@@ -186,7 +196,7 @@ export default class EditingControls extends Component<Props, State> {
             <IoIosPause /> Stop
           </button>
         )
-      } else if (this.props.audioManipulation.tts.length) {
+      } else if (Object.keys(this.props.audioManipulation.tts).length) {
         return (
           <button
             className="btn btn-primary btn-lg"

@@ -184,7 +184,7 @@ export default class Timeline extends Component<Props, State> {
     ) * 100 : 0;
     const durationAsString = this.dateToSeconds(new Date(this.props.manipulater.getMaxDuration() * 1000));
 
-    return this.props.manipulater.music || this.props.manipulater.tts.length ? (
+    return this.props.manipulater.music || Object.keys(this.props.manipulater.tts).length ? (
       <div className="mt-3 card shadow-sm overflow-hidden border-0 rounded">
         <div className="card-body position-relative">
           <div className="text-end text-black-50"

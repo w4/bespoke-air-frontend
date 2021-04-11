@@ -21,6 +21,7 @@ interface State {
   selectedMood: string | null;
   selectedVoice: SelectedCountryVoice | null;
   showStepZeroAreYouSure: boolean;
+  readyToComplete: boolean;
 }
 
 class GenerateVoiceover extends Component<Props, State> {
@@ -30,12 +31,13 @@ class GenerateVoiceover extends Component<Props, State> {
     selectedMusic: null,
     selectedVoice: null,
     showStepZeroAreYouSure: false,
+    readyToComplete: false,
   };
 
   private audioManipulation: AudioManipulation = new AudioManipulation(undefined);
 
   goToStepZero() {
-    if (this.audioManipulation.tts.length == 0) {
+    if (Object.keys(this.audioManipulation.tts).length == 0) {
       this.setState({ step: 0 });
       return;
     }
@@ -161,6 +163,7 @@ class GenerateVoiceover extends Component<Props, State> {
             selectedVoice={this.state.selectedVoice as any}
             selectedMusic={this.state.selectedMusic}
             audioManipulation={this.audioManipulation}
+            onIsReadyToRenderChange={(readyToComplete) => this.setState({ readyToComplete })}
           />
 
           <div className="mt-5">
@@ -172,13 +175,14 @@ class GenerateVoiceover extends Component<Props, State> {
             >
               <FaArrowLeft /> Back
             </button>
-            <button
-              type="button"
-              className="btn btn-success btn-lg shadow-sm"
-              onClick={() => this.doDownload()}
-            >
-              <AiOutlineDownload /> Complete
-            </button>
+            {this.state.readyToComplete ?
+              <button
+                type="button"
+                className="btn btn-success btn-lg shadow-sm"
+                onClick={() => this.doDownload()}
+              >
+                <AiOutlineDownload /> Complete
+            </button> : <></>}
           </div>
         </>
       );
