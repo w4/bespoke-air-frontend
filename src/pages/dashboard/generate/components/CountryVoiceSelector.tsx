@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { optionStyles } from "./common";
 import Select from "react-select";
 import { BeatLoader } from "react-spinners";
+import { ASSET_EXPIRY_TIME_SECS, BASE_URL } from "../../../../Stage";
 
 declare namespace Intl {
   class DisplayNames {
@@ -79,68 +80,81 @@ export default class CountryVoiceSelector extends Component<Props, State> {
     voices: {},
   } as State;
 
-  componentDidMount() {
-    fetch("https://dub.backend.air.bespokeonhold.com/voice/list")
-      .then((v) => v.json())
-      .then((v: VoiceListResponse) => {
-        // en-GB -> British English & sort
-        const languageNamesInEnglish = new Intl.DisplayNames(["en"], {
-          type: "language",
-        });
-        const languages = Object.keys(v)
-          .map((v) => [v, languageNamesInEnglish.of(v)])
-          .sort()
-          .map(([code, text]) => ({ value: code, label: <>{text}</> }));
+  private refreshListInterval?: ReturnType<typeof setInterval>;
+  private languageNamesInEnglish = new Intl.DisplayNames(["en"], {
+    type: "language",
+  });
 
-        // sort voices alphabetically and map them to the correct format
-        const voices: VoiceList = {};
-        for (const language of Object.keys(v)) {
-          const sortedVoices = Object.entries(v[language]).sort((a, b) =>
-            a[1].name === b[1].name ? 0 : a[1].name < b[1].name ? -1 : 1
-          );
+  async loadVoiceList(): Promise<{ languages: SelectElement[], voices: VoiceList }> {
+    const listRaw = await fetch(`${BASE_URL}/voice/list`);
+    const list: VoiceListResponse = await listRaw.json();
 
-          voices[language] = Object.fromEntries(
-            sortedVoices.map(([key, value]) => [
-              key,
-              {
-                display: (
-                  <>
-                    <img
-                      alt={`${value.name}'s face`}
-                      src={value.portrait_url}
-                      width="55rem"
-                    />{" "}
-                    {value.name}
-                  </>
-                ),
-                name: value.name,
-                portraitUrl: value.portrait_url,
-              },
-            ])
-          );
-        }
+    const languages = Object.keys(list)
+      .map((v) => [v, this.languageNamesInEnglish.of(v)])
+      .sort()
+      .map(([code, text]) => ({ value: code, label: <>{text}</> }));
 
-        // set defaults to first entry of languages and voices
-        const defaultLanguage = languages[0];
-        const defaultVoice = {
-          id: Object.keys(voices[defaultLanguage.value])[0],
-          name: Object.values(voices[defaultLanguage.value])[0].name,
-          display: Object.values(voices[defaultLanguage.value])[0].display,
-          portraitUrl: Object.values(voices[defaultLanguage.value])[0].portraitUrl,
-        };
+    // sort voices alphabetically and map them to the correct format
+    const voices: VoiceList = {};
+    for (const language of Object.keys(list)) {
+      const sortedVoices = Object.entries(list[language]).sort((a, b) =>
+        a[1].name === b[1].name ? 0 : a[1].name < b[1].name ? -1 : 1
+      );
 
-        const selectedCountryVoice = new SelectedCountryVoice(
-          defaultLanguage,
-          defaultVoice,
-        );
+      voices[language] = Object.fromEntries(
+        sortedVoices.map(([key, value]) => [
+          key,
+          {
+            display: (
+              <>
+                <img
+                  alt={`${value.name}'s face`}
+                  src={value.portrait_url}
+                  width="55rem"
+                />{" "}
+                {value.name}
+              </>
+            ),
+            name: value.name,
+            portraitUrl: value.portrait_url,
+          },
+        ])
+      );
+    }
 
-        this.props.onChange?.(selectedCountryVoice);
+    this.setState({
+      languages,
+      voices,
+    });
 
-        this.setState({
-          languages,
-          voices,
-        });
-      });
+    return { languages, voices };
+  }
+
+  async componentDidMount() {
+    this.refreshListInterval = setInterval(() => this.loadVoiceList(), ASSET_EXPIRY_TIME_SECS * 1000);
+
+    const { languages, voices } = await this.loadVoiceList();
+
+    // set defaults to first entry of languages and voices
+    const defaultLanguage = languages[0];
+    const defaultVoice = {
+      id: Object.keys(voices[defaultLanguage.value])[0],
+      name: Object.values(voices[defaultLanguage.value])[0].name,
+      display: Object.values(voices[defaultLanguage.value])[0].display,
+      portraitUrl: Object.values(voices[defaultLanguage.value])[0].portraitUrl,
+    };
+
+    const selectedCountryVoice = new SelectedCountryVoice(
+      defaultLanguage,
+      defaultVoice,
+    );
+
+    this.props.onChange?.(selectedCountryVoice);
+  }
+
+  componentWillUnmount() {
+    if (this.refreshListInterval)
+      clearInterval(this.refreshListInterval);
   }
 
   handleSelectChange(language?: SelectElement, voice?: SelectElement) {

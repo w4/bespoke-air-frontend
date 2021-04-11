@@ -54,14 +54,25 @@ export default class EditingControls extends Component<Props, State> {
 
     let musicBytes = undefined;
 
-    if (this.props.selectedMusic) {
-      musicBytes = await fetch(this.props.selectedMusic.file).then((v) =>
+    if (this.props.selectedMusic && this.props.selectedMusic.id !== this.props.audioManipulation.music?.text) {
+      const songRaw = await fetch(`${BASE_URL}/music/get/${this.props.selectedMusic.id}`);
+      const song = await songRaw.json();
+
+      musicBytes = await fetch(song.file).then((v) =>
         v.arrayBuffer()
       );
     }
 
-    this.props.audioManipulation.musicBuffer = musicBytes;
-    await this.props.audioManipulation.decodeMusic();
+    if (!this.props.selectedMusic) {
+      this.props.audioManipulation.music = undefined;
+      this.props.audioManipulation.musicBuffer = undefined;
+    } else if (this.props.selectedMusic.id !== this.props.audioManipulation.music?.text) {
+      this.props.audioManipulation.musicBuffer = musicBytes;
+      await this.props.audioManipulation.decodeMusic();
+
+      if (this.props.audioManipulation.music)
+        this.props.audioManipulation.music.text = this.props.selectedMusic.id;
+    }
 
     this.setState({
       loading: false,

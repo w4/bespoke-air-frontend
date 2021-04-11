@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { optionStyles } from "./common";
 import Select from "react-select";
 import "./Timeline.scss";
+import { BASE_URL } from "../../../../Stage";
 
 interface Props {
   onChange?: (trackId: SelectedSong | null) => void;
@@ -61,7 +62,7 @@ export default class MusicSelector extends Component<Props, State> {
     this.props.onChange?.(null);
 
     fetch(
-      `https://dub.backend.air.bespokeonhold.com/music/list/by-mood?mood=${encodeURIComponent(
+      `${BASE_URL}/music/list/by-mood?mood=${encodeURIComponent(
         mood
       )}`
     )
@@ -82,11 +83,13 @@ export default class MusicSelector extends Component<Props, State> {
       });
   }
 
-  onSongChange(id?: string) {
-    const song = id
-      ? this.state.musicForMood.find((v) => v.id === id) ||
-      this.state.musicForMood[0]
-      : this.state.musicForMood[0];
+  async onSongChange(id?: string) {
+    if (!id) {
+      id = this.state.musicForMood[0].id;
+    }
+
+    const songRaw = await fetch(`${BASE_URL}/music/get/${id}`);
+    const song = await songRaw.json();
 
     const songEvent = {
       mood: this.props.selectedMood || 'no',
@@ -144,7 +147,7 @@ export default class MusicSelector extends Component<Props, State> {
               onChange={(e) => this.onSongChange(e ? e.value : undefined)}
             />
             {this.props.selected ? <div className="fs-6 mt-4">
-              <audio src={this.props.selected.file} preload="none" controls />
+              <audio src={this.props.selected.file} preload="auto" controls />
             </div> : <></>}
           </>
         ) : (
