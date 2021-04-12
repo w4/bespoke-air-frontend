@@ -27,6 +27,7 @@ interface State {
   isPlaying: boolean;
   timeStarted: Date | null;
   ttsText: string;
+  ttsTranslated?: string;
   editingTts: number | null;
   isGeneratingText: boolean;
   showDeleteDialog: boolean;
@@ -45,6 +46,7 @@ export default class EditingControls extends Component<Props, State> {
     isPlaying: false,
     timeStarted: null,
     ttsText: "",
+    ttsTranslated: undefined,
     isGeneratingText: false,
     editingTts: null,
     showDeleteDialog: false,
@@ -92,7 +94,7 @@ export default class EditingControls extends Component<Props, State> {
 
   async pushNewTts() {
     const request = {
-      text: this.state.ttsText,
+      text: this.state.ttsTranslated ?? this.state.ttsText,
       language: this.props.selectedVoice.country.value,
       voice: this.props.selectedVoice.voice.id,
     };
@@ -116,14 +118,14 @@ export default class EditingControls extends Component<Props, State> {
         const track = this.state.editingTts || 0;
 
         if (this.state.ttsText != this.props.audioManipulation.tts[track]?.text) {
-          await this.props.audioManipulation.pushReplacementTts(track, voice, this.state.ttsText);
+          await this.props.audioManipulation.pushReplacementTts(track, voice, this.state.ttsTranslated ?? this.state.ttsText);
           this.timelineRef.current?.resetLengthOfTtsTrack(track);
         }
       } else {
-        await this.props.audioManipulation.pushNewTts(voice, this.state.ttsText);
+        await this.props.audioManipulation.pushNewTts(voice, this.state.ttsTranslated ?? this.state.ttsText);
       }
 
-      this.setState({ ttsText: "", editingTts: null });
+      this.setState({ ttsText: "", ttsTranslated: undefined, editingTts: null });
       this.props.onIsReadyToRenderChange(true);
     } catch (e) {
       alert("TODO: failed to grab voice " + e);
@@ -170,6 +172,7 @@ export default class EditingControls extends Component<Props, State> {
     this.setState({
       editingTts: null,
       ttsText: "",
+      ttsTranslated: undefined,
       showDeleteDialog: false,
     });
 
@@ -251,12 +254,14 @@ export default class EditingControls extends Component<Props, State> {
         <div className="row mt-3 position-relative">
           <TtsEntry
             selectedVoice={this.props.selectedVoice}
+            onTranslate={(ttsTranslated) => this.setState({ ttsTranslated })}
             onEnter={() => this.pushNewTts()}
             onChange={(v) => this.setState({ ttsText: v })}
-            onCancel={() => this.state.editingTts !== null ? this.setState({ ttsText: "", editingTts: null }) : null}
+            onCancel={() => this.state.editingTts !== null ? this.setState({ ttsText: "", ttsTranslated: undefined, editingTts: null }) : null}
             onDelete={() => this.setState({ showDeleteDialog: true })}
             showCancelDeleteButtons={this.state.editingTts !== null}
             value={this.state.ttsText}
+            translatedValue={this.state.ttsTranslated}
             disabled={this.state.isGeneratingText}
           />
 
