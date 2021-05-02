@@ -12,8 +12,12 @@ import { AiOutlineDownload } from "react-icons/ai";
 import AudioManipulation from "../../lib/AudioManipulation";
 import { Modal, Button } from "react-bootstrap";
 import toWav from "audiobuffer-to-wav";
+import { useAuth } from "../../useAuth";
 
-interface Props { }
+interface Props {
+  remainingOverallCharacters: number;
+  maxCharactersPerProduction: number;
+}
 
 interface State {
   step: number;
@@ -160,6 +164,8 @@ class GenerateVoiceover extends Component<Props, State> {
           </div>
 
           <EditingControls
+            remainingOverallCharacters={this.props.remainingOverallCharacters}
+            maxCharactersPerProduction={this.props.maxCharactersPerProduction}
             selectedVoice={this.state.selectedVoice as any}
             selectedMusic={this.state.selectedMusic}
             audioManipulation={this.audioManipulation}
@@ -214,9 +220,11 @@ class GenerateVoiceover extends Component<Props, State> {
 }
 
 function Home() {
+  const auth = useAuth();
+
   return (
     <div className="container">
-      <GenerateVoiceover />
+      <GenerateVoiceover remainingOverallCharacters={auth?.remainingOverallCharacters || 0} maxCharactersPerProduction={auth?.maxCharactersPerProduction || 0} />
     </div>
   );
 }

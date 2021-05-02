@@ -2,10 +2,10 @@ import logo from "../logo.png";
 import "./Login.css";
 import { useAuth } from "../useAuth";
 import { Link } from "react-router-dom";
-import React, { FormEvent, useRef, useState } from "react";
+import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { ImGoogle } from "react-icons/im";
 import Modal from 'react-bootstrap/Modal';
-import {BeatLoader} from "react-spinners";
+import { BeatLoader } from "react-spinners";
 
 
 function Login() {
@@ -19,7 +19,11 @@ function Login() {
   const [showingModal, setShowingModal] = useState(!!auth?.error);
   const modalRef = useRef(null);
 
-  console.log(auth);
+  useEffect(() => {
+    if (auth?.error) {
+      setShowingModal(true);
+    }
+  });
 
   const login = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -47,11 +51,12 @@ function Login() {
   return (
     <>
       <Modal centered show={showingModal} onHide={() => {
+        auth?.setError("");
         setShowingModal(false);
         setMessage({
           message: "",
           header: "",
-        })
+        });
       }}>
         <Modal.Header closeButton>
           <Modal.Title>{message.header || 'Error'}</Modal.Title>
@@ -89,8 +94,8 @@ function Login() {
                     className="btn btn-danger btn-lg btn-primary mt-3 mb-2 w-100"
                     disabled={loading}
                   >
-                    {loading ? <BeatLoader color="#36D7B7" size={5} /> : <>Continue</> }
-                </button>
+                    {loading ? <BeatLoader color="#36D7B7" size={5} /> : <>Continue</>}
+                  </button>
                 </form>
 
                 <div className="side-lines">or</div>

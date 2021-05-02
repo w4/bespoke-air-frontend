@@ -3,6 +3,8 @@ import { optionStyles } from "./common";
 import Select from "react-select";
 import { BeatLoader } from "react-spinners";
 import { ASSET_EXPIRY_TIME_SECS, BASE_URL } from "../../../../Stage";
+import firebase from "firebase";
+import { getAuthToken } from "../../../../useAuth";
 
 declare namespace Intl {
   class DisplayNames {
@@ -86,7 +88,11 @@ export default class CountryVoiceSelector extends Component<Props, State> {
   });
 
   async loadVoiceList(): Promise<{ languages: SelectElement[], voices: VoiceList }> {
-    const listRaw = await fetch(`${BASE_URL}/voice/list`);
+    const listRaw = await fetch(`${BASE_URL}/voice/list`, {
+      headers: {
+        "Authorization": await getAuthToken(),
+      }
+    });
     const list: VoiceListResponse = await listRaw.json();
 
     const languages = Object.keys(list)

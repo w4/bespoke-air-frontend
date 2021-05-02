@@ -3,6 +3,7 @@ import { optionStyles } from "./common";
 import Select from "react-select";
 import "./Timeline.scss";
 import { BASE_URL } from "../../../../Stage";
+import { getAuthToken } from "../../../../useAuth";
 
 interface Props {
   onChange?: (trackId: SelectedSong | null) => void;
@@ -37,7 +38,13 @@ export default class MusicSelector extends Component<Props, State> {
   } as State;
 
   componentDidMount(): void {
-    fetch("https://dub.backend.air.bespokeonhold.com/music/list/moods")
+    getAuthToken()
+      .then(token =>
+        fetch(`${BASE_URL}/music/list/moods`, {
+          headers: {
+            "Authorization": token,
+          }
+        }))
       .then((v) => v.json())
       .then((v) => this.setState({ musicMoods: ["no", ...v] }))
       .catch((e) => alert(e));
@@ -61,11 +68,18 @@ export default class MusicSelector extends Component<Props, State> {
     this.props.onMoodChange?.(mood);
     this.props.onChange?.(null);
 
-    fetch(
-      `${BASE_URL}/music/list/by-mood?mood=${encodeURIComponent(
-        mood
-      )}`
-    )
+    getAuthToken()
+      .then(token =>
+        fetch(
+          `${BASE_URL}/music/list/by-mood?mood=${encodeURIComponent(
+            mood
+          )}`,
+          {
+            headers: {
+              "Authorization": token,
+            }
+          }
+        ))
       .then((v) => v.json())
       .then((v) => {
         const songEvent = {
@@ -88,7 +102,11 @@ export default class MusicSelector extends Component<Props, State> {
       id = this.state.musicForMood[0].id;
     }
 
-    const songRaw = await fetch(`${BASE_URL}/music/get/${id}`);
+    const songRaw = await fetch(`${BASE_URL}/music/get/${id}`, {
+      headers: {
+        "Authorization": await getAuthToken(),
+      }
+    });
     const song = await songRaw.json();
 
     const songEvent = {
@@ -151,21 +169,21 @@ export default class MusicSelector extends Component<Props, State> {
             </div> : <></>}
           </>
         ) : (
-            <></>
-          );
+          <></>
+        );
     } else {
       songSelect =
         this.props.selectedMood === "no" ? (
           <></>
         ) : (
-            <div
-              className="d-inline-block"
-              style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
-            >
-              {this.props.selected?.artist} -{" "}
-              {this.props.selected?.track_name}
-            </div>
-          );
+          <div
+            className="d-inline-block"
+            style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
+          >
+            {this.props.selected?.artist} -{" "}
+            {this.props.selected?.track_name}
+          </div>
+        );
     }
 
     return (

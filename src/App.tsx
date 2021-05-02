@@ -36,10 +36,10 @@ function App() {
               path="/login"
               component={Login}
             ></UnauthenticatedRoute>
-            {/*<UnauthenticatedRoute
+            <UnauthenticatedRoute
               path="/register"
-              component={Register}
-            ></UnauthenticatedRoute>*/}
+              component={() => <Register />}
+            ></UnauthenticatedRoute>
           </Switch>
         </Router>
       </ProvideAuth>
@@ -62,7 +62,7 @@ function PrivateRoute({
       {...rest}
       render={(props) => {
         if (auth?.user) {
-          if (auth?.userPackage === null) {
+          if (auth?.packageExpires === null) {
             return (
               <div
                 style={{
@@ -75,9 +75,31 @@ function PrivateRoute({
                 <SkewLoader size={30} />
               </div>
             );
-            // TODO:
-            //} else if (requiresPackage && auth.userPackage === 0) {
-            //  return <strong>SORRY!! BUY A PACKAGE HAHA TODO</strong>;
+          } else if (requiresPackage && auth.packageExpires < new Date()) {
+            const packageExpires = auth.packageExpires;
+
+            auth.signout().finally(() => {
+              let message = "Please purchase a package to continue";
+
+              if (packageExpires.getTime() !== 0) {
+                message += `, unfortunately your package expired on ${packageExpires.toLocaleString()}`;
+              }
+
+              auth.setError(message);
+            });
+
+            return (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: "100vh",
+                }}
+              >
+                <SkewLoader size={30} />
+              </div>
+            );
           } else {
             return <Component {...props} />;
           }

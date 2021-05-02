@@ -8,8 +8,12 @@ firebase.initializeApp(firebaseConfig);
 interface AuthContext {
   user: firebase.User | null | false;
   error: string | null;
-  userPackage: number | null;
+  packageExpires: Date | null;
+  remainingOverallCharacters: number | null;
+  remainingProductions: number | null;
+  maxCharactersPerProduction: number | null;
   loading: boolean | null;
+  setError: (message: string) => any;
   signin: (email: string) => Promise<void>;
   signup: (
     email: string,
@@ -35,21 +39,40 @@ export const useAuth = (): AuthContext | null => {
   return useContext(authContext);
 };
 
+export async function getAuthToken() {
+  if (!firebase.auth().currentUser) {
+    console.error("Logged out due to no currentUser");
+    await firebase.auth().signOut();
+    return '';
+  }
+
+  return `Bearer ${await firebase.auth().currentUser?.getIdToken(true)}`;
+}
+
 function useProvideAuth() {
   const [user, setUser] = useState<firebase.User | null | false>(null);
-  const [userPackage, setPackage] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [remainingOverallCharacters, setRemainingOverallCharacters] = useState<number | null>(null);
+  const [remainingProductions, setRemainingProductions] = useState<number | null>(null);
+  const [maxCharactersPerProduction, setMaxCharactersPerProduction] = useState<number | null>(null);
+  const [packageExpires, setPackageExpires] = useState<Date | null>(null);
 
   const updatePackage = (u: firebase.User | null) => {
     if (!u) {
-      setPackage(null);
+      setRemainingOverallCharacters(null);
+      setRemainingProductions(null);
+      setMaxCharactersPerProduction(null);
+      setPackageExpires(null);
       return;
     }
 
     u.getIdTokenResult()
       .then((result) => {
-        setPackage(result.claims.package || 0);
+        setRemainingOverallCharacters(result.claims.remaining_overall_characters || 0);
+        setRemainingProductions(result.claims.remaining_productions || 0);
+        setMaxCharactersPerProduction(result.claims.max_characters_per_production || 0);
+        setPackageExpires(new Date((result.claims.package_expires || 0) * 1000));
       })
       .catch((e) => {
         // todo handle this
@@ -166,7 +189,8 @@ function useProvideAuth() {
         .finally(() => setLoading(false));
     }
 
-    const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+    const unsubscribeState = firebase.auth().onAuthStateChanged((user) => {
+      console.log("yooo refreshed yeno");
       if (user) {
         setUser(user);
         updatePackage(user);
@@ -176,15 +200,26 @@ function useProvideAuth() {
       }
     });
 
+    const unsubscribeToken = firebase.auth().onIdTokenChanged((user) => {
+      if (user) {
+        const currentUser = firebase.auth().currentUser;
+        setUser(currentUser);
+        updatePackage(currentUser);
+      }
+    });
+
     // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return () => { unsubscribeState(); unsubscribeToken(); };
   }, []);
 
   // Return the user object and auth methods
   return {
     user,
     error,
-    userPackage,
+    packageExpires,
+    remainingOverallCharacters,
+    remainingProductions,
+    maxCharactersPerProduction,
     loading,
     signin,
     signinWithGoogle,
@@ -192,5 +227,6 @@ function useProvideAuth() {
     signout,
     sendPasswordResetEmail,
     confirmPasswordReset,
+    setError,
   };
 }

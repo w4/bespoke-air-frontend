@@ -6,7 +6,7 @@ import { Component, FormEvent } from "react";
 
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
-const stripePromise = loadStripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
+const stripePromise = loadStripe("pk_test_51HocJLGXUxS8x6sbYNNRtOgVA1SXydkQOxjyaTIwCPTRv7ujs2ruBwWTj96b8QOMtw6SoiUEByM4eO51DVwvXsz8003979Xqag");
 
 interface Props { }
 interface State {

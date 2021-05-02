@@ -11,8 +11,11 @@ import { IoIosPlay, IoIosPause } from "react-icons/io";
 import { BeatLoader } from "react-spinners";
 import "./EditingControls.scss";
 import { Modal, Button } from "react-bootstrap";
+import { getAuthToken, useAuth } from "../../../../useAuth";
 
 interface Props {
+  remainingOverallCharacters: number;
+  maxCharactersPerProduction: number;
   selectedVoice: SelectedCountryVoice;
   selectedMusic: SelectedSong | null;
   audioManipulation: AudioManipulation;
@@ -60,7 +63,11 @@ export default class EditingControls extends Component<Props, State> {
     let musicBytes = undefined;
 
     if (this.props.selectedMusic && this.props.selectedMusic.id !== this.props.audioManipulation.music?.text) {
-      const songRaw = await fetch(`${BASE_URL}/music/get/${this.props.selectedMusic.id}`);
+      const songRaw = await fetch(`${BASE_URL}/music/get/${this.props.selectedMusic.id}`, {
+        headers: {
+          "Authorization": await getAuthToken(),
+        }
+      });
       const song = await songRaw.json();
 
       musicBytes = await fetch(song.file).then((v) =>
@@ -106,6 +113,7 @@ export default class EditingControls extends Component<Props, State> {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": await getAuthToken(),
         },
         body: JSON.stringify(request),
       }).then((v) => v.json());
@@ -253,6 +261,7 @@ export default class EditingControls extends Component<Props, State> {
 
         <div className="row mt-3 position-relative">
           <TtsEntry
+            allowedCharacters={Math.min(this.props.remainingOverallCharacters, this.props.maxCharactersPerProduction)}
             selectedVoice={this.props.selectedVoice}
             onTranslate={(ttsTranslated) => this.setState({ ttsTranslated })}
             onEnter={() => this.pushNewTts()}

@@ -22,10 +22,10 @@ interface Props {
   value: string;
   translatedValue?: string;
   className?: string;
+  allowedCharacters: number;
 }
 
 interface State {
-  allowedCharacters: number;
   offerTranslationFrom?: string;
   isTranslating: boolean;
   dontAskTranslation: boolean;
@@ -33,7 +33,6 @@ interface State {
 
 export default class TtsEntry extends Component<Props, State> {
   state = {
-    allowedCharacters: 500,
     offerTranslationFrom: undefined,
     isTranslating: false,
     dontAskTranslation: false,
@@ -44,7 +43,6 @@ export default class TtsEntry extends Component<Props, State> {
   private languageNamesInEnglish = new Intl.DisplayNames(["en"], {
     type: "language",
   });
-
 
   async checkShouldTranslateAndOffer() {
     if (this.state.isTranslating || this.state.dontAskTranslation || !this.props.value.length) {
@@ -77,7 +75,7 @@ export default class TtsEntry extends Component<Props, State> {
     }
 
     const formData = new FormData();
-    formData.append('key', 'AIzaSyAzyZ6QDRwANEZGQYhDYbvJeo-m72kmh60');
+    formData.append('key', 'AIzaSyAzyZ6QDRwANEZGQYhDYbvJeo-m72kmh60'); // TODO: move this to the server
     formData.append('q', this.props.value);
     formData.append('source', this.state.offerTranslationFrom ?? '');
     formData.append('target', this.props.selectedVoice?.country.value.split('-')[0] ?? '');
@@ -110,7 +108,7 @@ export default class TtsEntry extends Component<Props, State> {
               : ""
           }
           onChange={(e) => {
-            if (e.target.value.length > this.state.allowedCharacters) {
+            if (this.props.allowedCharacters > -1 && e.target.value.length > this.props.allowedCharacters) {
               return false;
             }
 
@@ -142,17 +140,18 @@ export default class TtsEntry extends Component<Props, State> {
           </div>
         ) : <></>}
 
-        <div
-          style={{
-            position: "absolute",
-            right: "1.2rem",
-            bottom: ".25rem",
-            fontSize: ".75rem",
-            color: "#707b9f",
-          }}
-        >
-          {this.props.value.length}/{this.state.allowedCharacters}
-        </div>
+        {this.props.allowedCharacters > -1 ?
+          <div
+            style={{
+              position: "absolute",
+              right: "1.2rem",
+              bottom: ".25rem",
+              fontSize: ".75rem",
+              color: "#707b9f",
+            }}
+          >
+            {this.props.value.length}/{this.props.allowedCharacters}
+          </div> : <></>}
       </div>
 
       {this.state.offerTranslationFrom && !this.state.dontAskTranslation && !this.state.isTranslating ?
