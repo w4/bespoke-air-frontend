@@ -4,12 +4,15 @@ import { loadStripe } from "@stripe/stripe-js";
 import { BASE_URL } from "../Stage";
 import { Component, FormEvent } from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { useLocation } from "react-router";
 
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
 const stripePromise = loadStripe("pk_test_51HocJLGXUxS8x6sbYNNRtOgVA1SXydkQOxjyaTIwCPTRv7ujs2ruBwWTj96b8QOMtw6SoiUEByM4eO51DVwvXsz8003979Xqag");
 
-interface Props { }
+interface Props {
+  location: ReturnType<typeof useLocation>,
+}
 
 interface Package {
   stripe_price_id: number;
@@ -53,6 +56,8 @@ export default class Register extends Component<Props, State> {
     }
 
     try {
+      const searchParams = new URLSearchParams(this.props.location.search);
+
       const resp = await fetch(`${BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
@@ -63,6 +68,7 @@ export default class Register extends Component<Props, State> {
           package: this.state.package,
           success_url: `${window.location.origin.toString()}/payment-success`,
           cancel_url: `${window.location.origin.toString()}/register`,
+          promotion_code: searchParams.get('code'),
         }),
       });
       const json = await resp.json();
@@ -83,6 +89,8 @@ export default class Register extends Component<Props, State> {
   }
 
   render() {
+    const searchParams = new URLSearchParams(this.props.location.search);
+
     return (
       <div className="bg-dark d-flex vh-100 justify-content-center align-items-center">
         <div>
@@ -168,7 +176,9 @@ export default class Register extends Component<Props, State> {
                   Pay Now
                 </button>
 
-                {this.state?.error ? <span className="small text-danger">{this.state.error}</span> : <></>}
+                {searchParams.has('code') ? <div className="small">Your discount code will apply at checkout.</div> : <></>}
+
+                {this.state?.error ? <div className="small text-danger">{this.state.error}</div> : <></>}
               </form>
             </div>
           </div>

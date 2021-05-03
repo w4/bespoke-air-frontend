@@ -5,6 +5,7 @@ import {
   Switch,
   Route,
   Redirect,
+  useLocation
 } from "react-router-dom";
 import "./App.css";
 
@@ -39,7 +40,7 @@ function App() {
             ></UnauthenticatedRoute>
             <UnauthenticatedRoute
               path="/register"
-              component={() => <Register />}
+              component={({ location }) => <Register location={location} />}
             ></UnauthenticatedRoute>
             <Route path="/payment-success" component={PaymentSuccess} />
           </Switch>
@@ -134,7 +135,7 @@ function UnauthenticatedRoute({
   component: Component,
   ...rest
 }: {
-  component: ({ match }: { match: any }) => JSX.Element;
+  component: ({ match, location }: { match: any, location: ReturnType<typeof useLocation> }) => JSX.Element;
 } & { [r: string]: any }) {
   const auth = useAuth();
 
