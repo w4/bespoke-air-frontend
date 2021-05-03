@@ -121,11 +121,14 @@ export default class MusicSelector extends Component<Props, State> {
   }
 
   render() {
+    const colour = "#a40a0a";
+    const colourDarker = "#8b2525";
+
     let moodSelect;
     if (!this.props.disabled) {
       moodSelect = (
         <Select
-          styles={optionStyles}
+          styles={optionStyles(colour, colourDarker)}
           value={{
             value: this.props.selectedMood,
             label: this.props.selectedMood,
@@ -139,7 +142,7 @@ export default class MusicSelector extends Component<Props, State> {
       moodSelect = (
         <div
           className="d-inline-block"
-          style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
+          style={{ padding: "6px 16px 7px 10px", color: colourDarker }}
         >
           {this.props.selectedMood || this.props.selected?.mood}
         </div>
@@ -152,7 +155,7 @@ export default class MusicSelector extends Component<Props, State> {
         this.props.selectedMood !== 'no' ? (
           <>
             <Select
-              styles={optionStyles}
+              styles={optionStyles(colour, colourDarker)}
               value={this.props.selected ? {
                 value: this.props.selected.id,
                 label: `${this.props.selected.artist} - ${this.props.selected.track_name}`,
@@ -178,7 +181,7 @@ export default class MusicSelector extends Component<Props, State> {
         ) : (
           <div
             className="d-inline-block"
-            style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
+            style={{ padding: "6px 16px 7px 10px", color: colourDarker }}
           >
             {this.props.selected?.artist} -{" "}
             {this.props.selected?.track_name}

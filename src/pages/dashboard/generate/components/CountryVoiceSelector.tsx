@@ -191,11 +191,14 @@ export default class CountryVoiceSelector extends Component<Props, State> {
   }
 
   render() {
+    const colour = '#00ecca';
+    const colourDarker = '#1e9480';
+
     let languagePicker;
     if (!this.props.disabled) {
       languagePicker = (
         <Select
-          styles={optionStyles}
+          styles={optionStyles(colour, colourDarker)}
           value={this.props.selected?.country}
           options={this.state.languages}
           placeholder="&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"
@@ -206,7 +209,7 @@ export default class CountryVoiceSelector extends Component<Props, State> {
       languagePicker = (
         <div
           className="d-inline-block"
-          style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
+          style={{ padding: "6px 16px 7px 10px", color: colourDarker }}
         >
           {this.props.selected?.country.label}
         </div>
@@ -217,7 +220,7 @@ export default class CountryVoiceSelector extends Component<Props, State> {
     if (!this.props.disabled) {
       voicePicker = (
         <Select
-          styles={optionStyles}
+          styles={optionStyles(colour, colourDarker)}
           value={this.props.selected?.getVoiceAsSelectElement()}
           placeholder="&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"
           options={Object.entries(
@@ -230,7 +233,7 @@ export default class CountryVoiceSelector extends Component<Props, State> {
       voicePicker = (
         <div
           className="d-inline-block"
-          style={{ padding: "6px 16px 7px 10px", color: "#707b9f" }}
+          style={{ padding: "6px 16px 7px 10px", color: colourDarker }}
         >
           {this.props.selected?.voice.display || ''}
         </div>

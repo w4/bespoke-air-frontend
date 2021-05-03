@@ -202,7 +202,7 @@ export default class EditingControls extends Component<Props, State> {
       if (this.state.isPlaying) {
         return (
           <button
-            className="btn btn-primary btn-lg"
+            className="btn btn-dark btn-lg"
             onClick={async () => {
               await this.playingBuffer?.stop();
               this.setState({ isPlaying: false, timeStarted: null, });
@@ -214,7 +214,7 @@ export default class EditingControls extends Component<Props, State> {
       } else if (Object.keys(this.props.audioManipulation.tts).length) {
         return (
           <button
-            className="btn btn-primary btn-lg"
+            className="btn btn-dark btn-lg"
             onClick={() => {
               this.setState({ rendering: true }, () => {
                 this.forceUpdate(() => {

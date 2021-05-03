@@ -162,7 +162,7 @@ export default class TtsEntry extends Component<Props, State> {
                 Your input text looks <strong>{this.languageNamesInEnglish.of(this.state.offerTranslationFrom ?? '')}</strong>, would you like us to translate it to <strong>{this.languageNamesInEnglish.of(this.props.selectedVoice?.country.value ?? '')}</strong> for you?
               </p>
 
-              <button className="btn btn-primary me-2" onClick={() => {
+              <button className="btn btn-dark me-2" onClick={() => {
                 this.setState({ isTranslating: true });
                 this.translate();
               }}>Translate</button>

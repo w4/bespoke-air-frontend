@@ -11,7 +11,7 @@ function Dashboard({ match }) {
 
   return (
     <div
-      className="min-vh-100 bg-blue"
+      className="min-vh-100 bg-dark"
       style={{ paddingBottom: "20px" /*fix this*/ }}
     >
       <nav className="navbar navbar-light w-100 navbar-expand-sm bg-white shadow-sm">

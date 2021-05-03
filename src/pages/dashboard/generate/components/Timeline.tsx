@@ -254,8 +254,8 @@ export default class Timeline extends Component<Props, State> {
                       onMouseDown={(e) => this.setState({ movingTrack: id })}
                     />
                   ) : (
-                      <div {...props} />
-                    )
+                    <div {...props} />
+                  )
                 }
                 snapDragDisabled={true}
                 pearling
@@ -271,7 +271,7 @@ export default class Timeline extends Component<Props, State> {
                   paddingRight: "10px",
                   marginRight: "10px",
                   borderRight: "1px solid #181d45",
-                  color: "#03A9F4",
+                  color: "#a40a0a",
                 }}
               >
                 <MdMusicNote />
@@ -279,7 +279,7 @@ export default class Timeline extends Component<Props, State> {
 
               <ReactSlider
                 ref={this.musicTrackRef}
-                className="horizontal-slider blue"
+                className="horizontal-slider red"
                 thumbClassName="slider-thumb"
                 trackClassName="slider-track"
                 step={0.0000000000000001}
@@ -313,20 +313,20 @@ export default class Timeline extends Component<Props, State> {
                       }
                     />
                   ) : (
-                      <div {...props} />
-                    )
+                    <div {...props} />
+                  )
                 }
                 snapDragDisabled={true}
                 pearling
               />
             </div>
           ) : (
-              <></>
-            )}
+            <></>
+          )}
         </div>
       </div>
     ) : (
-        <></>
-      );
+      <></>
+    );
   }
 }

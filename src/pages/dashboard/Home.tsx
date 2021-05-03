@@ -87,7 +87,7 @@ class GenerateVoiceover extends Component<Props, State> {
             <div className="mt-5">
               <button
                 type="button"
-                className="btn btn-primary btn-lg shadow-sm"
+                className="btn btn-dark btn-lg"
                 onClick={(e) => this.setState({ step: 1 })}
               >
                 Continue <FaArrowRight />
@@ -121,7 +121,7 @@ class GenerateVoiceover extends Component<Props, State> {
               <div className="mt-5">
                 <button
                   type="button"
-                  className="btn btn-dark btn-lg shadow-sm"
+                  className="btn btn-dark btn-lg"
                   style={{ marginRight: "10px" }}
                   onClick={(e) => this.goToStepZero()}
                 >
@@ -129,7 +129,7 @@ class GenerateVoiceover extends Component<Props, State> {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary btn-lg shadow-sm"
+                  className="btn btn-dark btn-lg"
                   onClick={(e) => this.setState({ step: 2 })}
                 >
                   Continue <FaArrowRight />
@@ -175,7 +175,7 @@ class GenerateVoiceover extends Component<Props, State> {
           <div className="mt-5">
             <button
               type="button"
-              className="btn btn-dark btn-lg shadow-sm"
+              className="btn btn-dark btn-lg"
               style={{ marginRight: "10px" }}
               onClick={(e) => this.setState({ step: 1 })}
             >
