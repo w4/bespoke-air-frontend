@@ -189,6 +189,10 @@ export default class EditingControls extends Component<Props, State> {
     }
   }
 
+  getUsedCharactersForProduction() {
+    return this.props.audioManipulation.tts.reduce((i, v) => i + (v.text?.length || 0), 0);
+  }
+
   render() {
     const DrawPlayButton = () => {
       if (this.state.rendering) {
@@ -261,7 +265,7 @@ export default class EditingControls extends Component<Props, State> {
 
         <div className="row mt-3 position-relative">
           <TtsEntry
-            allowedCharacters={Math.min(this.props.remainingOverallCharacters, this.props.maxCharactersPerProduction)}
+            allowedCharacters={Math.min(this.props.remainingOverallCharacters, this.props.maxCharactersPerProduction - this.getUsedCharactersForProduction())}
             selectedVoice={this.props.selectedVoice}
             onTranslate={(ttsTranslated) => this.setState({ ttsTranslated })}
             onEnter={() => this.pushNewTts()}

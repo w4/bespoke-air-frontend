@@ -2,7 +2,7 @@ import "./Dashboard.css";
 import logo from "../logo.png";
 import { Link, NavLink, Route } from "react-router-dom";
 import DashboardHome from "./dashboard/Home.tsx";
-import DashboardSettings from "./dashboard/Settings";
+import DashboardAccount from "./dashboard/Account";
 import { FiLogOut } from "react-icons/fi";
 import { useAuth } from "../useAuth";
 
@@ -43,15 +43,15 @@ function Dashboard({ match }) {
                   Home
                 </NavLink>
               </li>
-              {/*<li className="nav-item">
+              <li className="nav-item">
                 <NavLink
-                  to={match.url + "/settings"}
+                  to={match.url + "/account"}
                   className="nav-link"
                   activeClassName="active"
                 >
-                  Settings
+                  Account
                 </NavLink>
-              </li>*/}
+              </li>
             </ul>
 
             <div>
@@ -70,9 +70,9 @@ function Dashboard({ match }) {
       <div className="mt-3 text-white">
         <Route path={`${match.url}/`} exact component={DashboardHome} />
         <Route
-          path={`${match.url}/settings`}
+          path={`${match.url}/account`}
           exact
-          component={DashboardSettings}
+          component={DashboardAccount}
         />
       </div>
     </div>

@@ -14,6 +14,7 @@ import { ProvideAuth, useAuth } from "./useAuth";
 import Register from "./pages/Register";
 import { SkewLoader } from "react-spinners";
 import React, { Component } from "react";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
               path="/register"
               component={() => <Register />}
             ></UnauthenticatedRoute>
+            <Route path="/payment-success" component={PaymentSuccess} />
           </Switch>
         </Router>
       </ProvideAuth>

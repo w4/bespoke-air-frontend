@@ -13,6 +13,7 @@ interface AuthContext {
   remainingProductions: number | null;
   maxCharactersPerProduction: number | null;
   loading: boolean | null;
+  subscriptionId: string | null;
   setError: (message: string) => any;
   signin: (email: string) => Promise<void>;
   signup: (
@@ -57,6 +58,7 @@ function useProvideAuth() {
   const [remainingProductions, setRemainingProductions] = useState<number | null>(null);
   const [maxCharactersPerProduction, setMaxCharactersPerProduction] = useState<number | null>(null);
   const [packageExpires, setPackageExpires] = useState<Date | null>(null);
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 
   const updatePackage = (u: firebase.User | null) => {
     if (!u) {
@@ -64,6 +66,7 @@ function useProvideAuth() {
       setRemainingProductions(null);
       setMaxCharactersPerProduction(null);
       setPackageExpires(null);
+      setSubscriptionId(null);
       return;
     }
 
@@ -73,6 +76,7 @@ function useProvideAuth() {
         setRemainingProductions(result.claims.remaining_productions || 0);
         setMaxCharactersPerProduction(result.claims.max_characters_per_production || 0);
         setPackageExpires(new Date((result.claims.package_expires || 0) * 1000));
+        setSubscriptionId(result.claims.subscription_id || null);
       })
       .catch((e) => {
         // todo handle this
@@ -220,6 +224,7 @@ function useProvideAuth() {
     remainingOverallCharacters,
     remainingProductions,
     maxCharactersPerProduction,
+    subscriptionId,
     loading,
     signin,
     signinWithGoogle,

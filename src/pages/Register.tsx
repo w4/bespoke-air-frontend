@@ -3,6 +3,7 @@ import ReactTooltip from "react-tooltip";
 import { loadStripe } from "@stripe/stripe-js";
 import { BASE_URL } from "../Stage";
 import { Component, FormEvent } from "react";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
@@ -10,39 +11,72 @@ const stripePromise = loadStripe("pk_test_51HocJLGXUxS8x6sbYNNRtOgVA1SXydkQOxjya
 
 interface Props { }
 interface State {
-  packages: { id: number; name: string; description: string; price: number }[];
+  packages: {
+    stripe_price_id: number;
+    name: string;
+    description: string;
+    frequency: string;
+    price: number;
+    currency: string;
+    max_characters_per_production: number;
+    productions: number;
+    characters: number;
+  }[];
   email: string;
   package: number;
+  error: JSX.Element | null;
 }
 
 export default class Register extends Component<Props, State> {
   componentDidMount() {
     fetch(`${BASE_URL}/auth/packages`)
       .then((v) => v.json())
-      .then((packages) => this.setState({ packages }));
+      .then((packages) => this.setState({ packages }))
+      .catch((e) => this.setState({ error: <>We failed to load our packages: {e.message}. Please try again later or contact us via email <a href="mailto:info@airtm.app">info@airtm.app</a></> }));
   }
 
   async handleSubmit(form: FormEvent<HTMLFormElement>) {
     form.preventDefault();
     const stripe = await stripePromise;
 
-    if (!stripe) throw new Error("oh no!");
+    if (!stripe) {
+      this.setState({ error: <>We failed to load our payment processing gateway, please try again later or contact us via email <a href="mailto:info@airtm.app">info@airtm.app</a>.</> });
+      return;
+    }
 
-    const resp = await fetch(`${BASE_URL}/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: this.state.email,
-        package: this.state.package,
-        success_url: "https://google.com/",
-        cancel_url: "https://yahoo.com/",
-      }),
-    });
-    const json = await resp.json();
+    if (!this.state.email || !this.state.package) {
+      this.setState({ error: <>Please select a package to continue.</> });
+      return;
+    }
 
-    stripe.redirectToCheckout({ sessionId: json.session_id });
+    try {
+      const resp = await fetch(`${BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: this.state.email,
+          package: this.state.package,
+          success_url: `${window.location.origin.toString()}/payment-success`,
+          cancel_url: `${window.location.origin.toString()}/register`,
+        }),
+      });
+      const json = await resp.json();
+
+      if (json.error) {
+        this.setState({
+          error: json.message,
+        });
+        return;
+      }
+
+      stripe.redirectToCheckout({ sessionId: json.session_id });
+    } catch (e) {
+      this.setState({
+        error: <>Failed to redirect you to our payment processing gateway: {e.message}. Please try again later or contact us via email <a href="mailto:info@airtm.app">info@airtm.app</a></>
+      })
+    }
   }
 
   render() {
@@ -56,7 +90,7 @@ export default class Register extends Component<Props, State> {
 
           <div className="card shadow border-0">
             <div className="card-header">
-              <strong>Register an Account</strong>
+              <strong>Register for a Package</strong>
             </div>
             <div className="card-body">
               <p>
@@ -89,33 +123,42 @@ export default class Register extends Component<Props, State> {
 
                 <div className="mt-2">
                   <ReactTooltip />
-                  {Object.entries(this.state ? this.state.packages : []).map(
+                  {Object.entries(this.state && this.state.packages ? this.state.packages : []).map(
                     ([k, v]) => (
-                      <div className="form-check" key={v.id}>
+                      <div className="form-check" key={v.stripe_price_id}>
                         <input
                           className="form-check-input"
                           type="radio"
                           name="package"
-                          value={v.id}
-                          id={`package-${v.id}`}
+                          value={v.stripe_price_id}
+                          id={`package-${k}`}
                           onChange={(e) =>
-                            this.setState({ ...this.state, package: v.id })
+                            this.setState({ ...this.state, package: v.stripe_price_id })
                           }
                         />
                         <label
                           className="form-check-label"
-                          htmlFor={`package-${v.id}`}
+                          htmlFor={`package-${v.stripe_price_id}`}
                         >
-                          <span
-                            data-tip={v.description}
-                            style={{
-                              textDecoration: "underline dotted",
-                              cursor: "help",
-                            }}
-                          >
-                            {v.name}
-                          </span>{" "}
-                          - ${v.price / 100}
+                          <OverlayTrigger overlay={(props) => (
+                            <Tooltip id="button-tooltip" {...props}>
+                              {v.description || `A total of ${v.characters.toLocaleString()} characters and ${v.productions.toLocaleString()} productions (with a maximum ${v.max_characters_per_production.toLocaleString()} characters per production) per billing period.`}
+                            </Tooltip>
+                          )}>
+                            <span
+                              style={{
+                                textDecoration: "underline dotted",
+                                cursor: "help",
+                              }}
+                            >
+                              {v.name}
+                            </span></OverlayTrigger>{" "}
+                          - {(v.price / 100).toLocaleString(undefined, {
+                              style: 'currency',
+                              currency: v.currency,
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })}/{v.frequency}
                         </label>
                       </div>
                     )
@@ -124,10 +167,12 @@ export default class Register extends Component<Props, State> {
 
                 <button
                   type="submit"
-                  className="btn btn-danger btn-lg btn-primary mt-3 mb-3 w-100"
+                  className="btn btn-lg btn-primary mt-3 mb-3 w-100"
                 >
                   Pay Now
                 </button>
+
+                {this.state?.error ? <span className="small text-danger">{this.state.error}</span> : <></>}
               </form>
             </div>
           </div>

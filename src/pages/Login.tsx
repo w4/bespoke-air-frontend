@@ -110,17 +110,17 @@ function Login() {
                 <div>
                   <small>
                     <Link to="/register" className="text-decoration-none">
-                      Not registered?
+                      Purchase a Package
                   </Link>
                   </small>
                 </div>
-                <div>
+                {/*<div>
                   <small>
                     <Link to="/register" className="text-decoration-none">
                       Lost access to your email address?
                   </Link>
                   </small>
-                </div>
+                </div>*/}
               </div>
             </div>
           </div>
