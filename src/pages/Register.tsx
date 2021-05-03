@@ -10,18 +10,21 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 const stripePromise = loadStripe("pk_test_51HocJLGXUxS8x6sbYNNRtOgVA1SXydkQOxjyaTIwCPTRv7ujs2ruBwWTj96b8QOMtw6SoiUEByM4eO51DVwvXsz8003979Xqag");
 
 interface Props { }
+
+interface Package {
+  stripe_price_id: number;
+  name: string;
+  description: string;
+  frequency: string;
+  price: number;
+  currency: string;
+  max_characters_per_production: number;
+  productions: number;
+  characters: number;
+}
+
 interface State {
-  packages: {
-    stripe_price_id: number;
-    name: string;
-    description: string;
-    frequency: string;
-    price: number;
-    currency: string;
-    max_characters_per_production: number;
-    productions: number;
-    characters: number;
-  }[];
+  packages: Package[];
   email: string;
   package: number;
   error: JSX.Element | null;
@@ -31,7 +34,7 @@ export default class Register extends Component<Props, State> {
   componentDidMount() {
     fetch(`${BASE_URL}/auth/packages`)
       .then((v) => v.json())
-      .then((packages) => this.setState({ packages }))
+      .then((packages) => this.setState({ packages: packages.sort((first: Package, second: Package) => first.price - second.price) }))
       .catch((e) => this.setState({ error: <>We failed to load our packages: {e.message}. Please try again later or contact us via email <a href="mailto:info@airtm.app">info@airtm.app</a></> }));
   }
 
@@ -81,27 +84,20 @@ export default class Register extends Component<Props, State> {
 
   render() {
     return (
-      <div id="login-page">
-        <div
-          id="login-container"
-          className="d-flex vh-100 justify-content-center align-items-center"
-        >
-          {/*<img src={logo} height="200rem" />*/}
-
+      <div className="bg-dark d-flex vh-100 justify-content-center align-items-center">
+        <div>
+          <h1 className="text-white">Register for a Package</h1>
           <div className="card shadow border-0">
-            <div className="card-header">
-              <strong>Register for a Package</strong>
-            </div>
             <div className="card-body">
               <p>
                 Thanks for your interest in joining Air™, we'd love to see you
                 on our platform.
-              </p>
+                </p>
 
               <p>
                 Please enter your email address, and select a package and you'll
                 be away in no time!
-              </p>
+                </p>
 
               <form onSubmit={(e) => this.handleSubmit(e)}>
                 <div className="form-floating">
@@ -167,7 +163,7 @@ export default class Register extends Component<Props, State> {
 
                 <button
                   type="submit"
-                  className="btn btn-lg btn-primary mt-3 mb-3 w-100"
+                  className="btn btn-lg btn-dark mt-3 mb-3 w-100"
                 >
                   Pay Now
                 </button>
