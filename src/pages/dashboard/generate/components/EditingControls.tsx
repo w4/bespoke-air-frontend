@@ -99,15 +99,24 @@ export default class EditingControls extends Component<Props, State> {
     await this.playingBuffer?.stop();
   }
 
-  async pushNewTts() {
-    const request = {
-      text: this.state.ttsTranslated ?? this.state.ttsText,
-      language: this.props.selectedVoice.country.value,
-      voice: this.props.selectedVoice.voice.id,
-    };
+  async pushNewTts(promise: Promise<void>) {
+    try {
+      await promise;
+    } catch (e) {
+      alert("Failed to fully translate text " + e.message);
+    }
 
     try {
-      this.setState({ isGeneratingText: true });
+      await new Promise<void>((resolve) => {
+        this.setState({ isGeneratingText: true }, () => resolve());
+      });
+
+      // by this point all of our state has definitely updated
+      const request = {
+        text: this.state.ttsTranslated ?? this.state.ttsText,
+        language: this.props.selectedVoice.country.value,
+        voice: this.props.selectedVoice.voice.id,
+      };
 
       const generateResponse = await fetch(BASE_URL + "/generate", {
         method: "POST",
@@ -136,7 +145,7 @@ export default class EditingControls extends Component<Props, State> {
       this.setState({ ttsText: "", ttsTranslated: undefined, editingTts: null });
       this.props.onIsReadyToRenderChange(true);
     } catch (e) {
-      alert("TODO: failed to grab voice " + e);
+      alert("TODO: failed to grab voice " + e.message);
     } finally {
       this.setState({ isGeneratingText: false });
     }
@@ -268,7 +277,7 @@ export default class EditingControls extends Component<Props, State> {
             allowedCharacters={Math.min(this.props.remainingOverallCharacters, this.props.maxCharactersPerProduction - this.getUsedCharactersForProduction())}
             selectedVoice={this.props.selectedVoice}
             onTranslate={(ttsTranslated) => this.setState({ ttsTranslated })}
-            onEnter={() => this.pushNewTts()}
+            onEnter={(promise) => this.pushNewTts(promise)}
             onChange={(v) => this.setState({ ttsText: v })}
             onCancel={() => this.state.editingTts !== null ? this.setState({ ttsText: "", ttsTranslated: undefined, editingTts: null }) : null}
             onDelete={() => this.setState({ showDeleteDialog: true })}

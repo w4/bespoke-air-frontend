@@ -13,7 +13,7 @@ declare namespace Intl {
 interface Props {
   onChange: (text: string) => any;
   onTranslate: (text: string | undefined) => any;
-  onEnter: () => any;
+  onEnter: (promise: Promise<void>) => any;
   onCancel?: () => any;
   onDelete?: () => any;
   showCancelDeleteButtons?: boolean;
@@ -70,7 +70,7 @@ export default class TtsEntry extends Component<Props, State> {
   }
 
   async translate() {
-    if (!this.props.value.length || typeof this.state.offerTranslationFrom === undefined) {
+    if (!this.props.value.length || typeof this.state.offerTranslationFrom === undefined || !this.state.isTranslating) {
       return;
     }
 
@@ -120,7 +120,7 @@ export default class TtsEntry extends Component<Props, State> {
           onKeyDown={(e) => {
             if (e.key === "Enter" && this.props.onEnter) {
               e.preventDefault();
-              this.props.onEnter();
+              this.props.onEnter(this.translate());
             } else if (e.key == "Escape" && this.props.onCancel) {
               e.preventDefault();
               this.props.onCancel();
@@ -163,8 +163,7 @@ export default class TtsEntry extends Component<Props, State> {
               </p>
 
               <button className="btn btn-dark me-2" onClick={() => {
-                this.setState({ isTranslating: true });
-                this.translate();
+                this.setState({ isTranslating: true }, () => this.translate());
               }}>Translate</button>
               <button className="btn btn-danger" onClick={() => this.setState({ dontAskTranslation: true })}>Leave as-is</button>
             </div>
