@@ -38,7 +38,7 @@ function Account() {
           });
           const json = await res.json();
 
-          if (json.error) {
+          if (json && json.error) {
             setMessage({
               header: "Error",
               message: <>Failed to cancel your subscription, please contact your account manager, or email us at <a href="mailto:info@airtm.app">info@airtm.app</a>.<br /><br />Error message: {json.message || 'unknown'}</>,
