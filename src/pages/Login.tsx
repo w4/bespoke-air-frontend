@@ -65,7 +65,12 @@ function Login() {
       </Modal>
 
       <div className="bg-dark p-4 d-flex flex-column flex-md-row min-vh-100 justify-content-center align-items-center">
-        <img alt="Logo" src={logo} height="200rem" />
+        <div className="text-center">
+          <img alt="Logo" className="d-block" src={logo} height="200rem" />
+          <Link to="/register" className="btn btn-outline-danger mb-2">
+            Purchase a Package
+          </Link>
+        </div>
 
         <div className="card shadow border-0">
           <div className="card-body">
@@ -102,14 +107,6 @@ function Login() {
             >
               <ImGoogle /> Login with Google
               </button>
-
-            <div>
-              <small>
-                <Link to="/register" className="text-decoration-none">
-                  Purchase a Package
-                  </Link>
-              </small>
-            </div>
           </div>
         </div>
       </div>
