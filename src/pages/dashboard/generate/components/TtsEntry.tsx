@@ -29,6 +29,7 @@ interface State {
   offerTranslationFrom?: string;
   isTranslating: boolean;
   dontAskTranslation: boolean;
+  error: string | null;
 }
 
 export default class TtsEntry extends Component<Props, State> {
@@ -36,6 +37,7 @@ export default class TtsEntry extends Component<Props, State> {
     offerTranslationFrom: undefined,
     isTranslating: false,
     dontAskTranslation: false,
+    error: null,
   };
 
   private checkShouldTranslateDebounced = _.debounce(this.checkShouldTranslateAndOffer.bind(this), 5000);
@@ -108,18 +110,31 @@ export default class TtsEntry extends Component<Props, State> {
               : ""
           }
           onChange={(e) => {
-            if (this.props.allowedCharacters > -1 && e.target.value.length > this.props.allowedCharacters) {
-              return false;
-            }
-
             if (this.props.onChange) this.props.onChange(e.target.value);
 
             this.checkShouldTranslateDebounced();
             this.translateDebounced();
           }}
           onKeyDown={(e) => {
+            this.setState({ error: null });
+
             if (e.key === "Enter" && this.props.onEnter) {
               e.preventDefault();
+
+              const characters = this.props.translatedValue?.length || this.props.value.length;
+              if (this.props.allowedCharacters > -1 && characters > this.props.allowedCharacters) {
+                if (this.props.translatedValue) {
+                  this.setState({
+                    error: `You're over your remaining character limit by ${characters - this.props.allowedCharacters} characters. This is based off of your translated character count.`
+                  })
+                } else {
+                  this.setState({
+                    error: `You're over your remaining character limit by ${characters - this.props.allowedCharacters} characters.`
+                  });
+                }
+                return;
+              }
+
               this.props.onEnter(this.translate());
             } else if (e.key == "Escape" && this.props.onCancel) {
               e.preventDefault();
@@ -147,12 +162,16 @@ export default class TtsEntry extends Component<Props, State> {
               right: "1.2rem",
               bottom: ".25rem",
               fontSize: ".75rem",
-              color: "#707b9f",
+              color: this.props.allowedCharacters > -1
+                && ((this.props.translatedValue?.length || this.props.value.length) > this.props.allowedCharacters)
+                ? "#dc3545" : "#707b9f",
             }}
           >
-            {this.props.value.length}/{this.props.allowedCharacters}
+            {this.props.translatedValue?.length || this.props.value.length}/{this.props.allowedCharacters}
           </div> : <></>}
       </div>
+
+      {this.state.error ? <div className="text-danger">{this.state.error}</div> : <></>}
 
       {this.state.offerTranslationFrom && !this.state.dontAskTranslation && !this.state.isTranslating ?
         <div className={this.props.className}>
