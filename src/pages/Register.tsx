@@ -8,7 +8,7 @@ import { useLocation } from "react-router";
 
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
-const stripePromise = loadStripe("pk_test_51HocJLGXUxS8x6sbYNNRtOgVA1SXydkQOxjyaTIwCPTRv7ujs2ruBwWTj96b8QOMtw6SoiUEByM4eO51DVwvXsz8003979Xqag");
+const stripePromise = loadStripe("pk_live_51IhrCDEpAYJI0hR3IEKz2cR8WwmVXAokcr4r8Bily5F8VnBiGTXOuTI6zB7rsmz2fwPJEliNhCTSoImAC9dL4CF300lZpi4skg");
 
 interface Props {
   location: ReturnType<typeof useLocation>,
